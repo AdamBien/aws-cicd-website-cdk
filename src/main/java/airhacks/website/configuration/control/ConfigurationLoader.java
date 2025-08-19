@@ -7,11 +7,12 @@ import java.util.Properties;
 
 public interface ConfigurationLoader {
 
+    String CONFIGURATION_FILE = "configuration.properties";
+
     static Properties loadConfiguration() {
         var properties = new Properties();
         
-        // Try loading from file system first
-        var configFile = Path.of("config.properties");
+        var configFile = Path.of(CONFIGURATION_FILE);
         if (Files.exists(configFile)) {
             try (var input = Files.newInputStream(configFile)) {
                 properties.load(input);
@@ -22,17 +23,6 @@ public interface ConfigurationLoader {
             }
         }
         
-        // Fall back to classpath
-        try (var input = ConfigurationLoader.class.getClassLoader().getResourceAsStream("config.properties")) {
-            if (input != null) {
-                properties.load(input);
-                System.out.println("Loaded configuration from classpath");
-            } else {
-                System.out.println("No config.properties found in classpath, using defaults");
-            }
-        } catch (IOException e) {
-            System.out.println("Failed to load config.properties from classpath: " + e.getMessage());
-        }
         
         return properties;
     }
