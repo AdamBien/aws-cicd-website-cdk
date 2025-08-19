@@ -1,2 +1,4 @@
-# aws-cicd-website-cdk
+# Static Website Hosting
+
 Static website with CI/CD pipeline
+
