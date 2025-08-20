@@ -1,5 +1,6 @@
 package airhacks.website.configuration.control;
 
+import airhacks.website.log.control.Log;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,10 +18,10 @@ public interface ConfigurationLoader {
         if (Files.exists(configFile)) {
             try (var input = Files.newInputStream(configFile)) {
                 properties.load(input);
-                System.out.println("Loaded configuration from: " + configFile.toAbsolutePath());
+                Log.info("Loaded configuration from: " + configFile.toAbsolutePath());
                 return properties;
             } catch (IOException e) {
-                System.out.println("Failed to load config.properties from file system: " + e.getMessage());
+                Log.error("Failed to load config.properties from file system: " + e.getMessage());
             }
         }
         
