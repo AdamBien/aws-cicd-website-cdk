@@ -8,6 +8,7 @@ import java.util.Properties;
 public interface ConfigurationLoader {
 
     String CONFIGURATION_FILE = "configuration.properties";
+    Properties CONFIGURATION = loadConfiguration();
 
     static Properties loadConfiguration() {
         var properties = new Properties();
@@ -27,12 +28,12 @@ public interface ConfigurationLoader {
         return properties;
     }
     
-    static String getProperty(Properties properties, String key, String defaultValue) {
-        return properties.getProperty(key, defaultValue);
+    static String getProperty(String key, String defaultValue) {
+        return CONFIGURATION.getProperty(key, defaultValue);
     }
     
-    static String getRequiredProperty(Properties properties, String key) {
-        var value = properties.getProperty(key);
+    static String getRequiredProperty(String key) {
+        var value = CONFIGURATION.getProperty(key);
         if (value == null || value.isBlank()) {
             throw new IllegalStateException("Required property '" + key + "' is not configured");
         }
