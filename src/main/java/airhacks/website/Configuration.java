@@ -2,9 +2,7 @@ package airhacks.website;
 
 import airhacks.website.codebuild.control.GitRepository;
 import airhacks.website.configuration.control.ConfigurationLoader;
-import software.amazon.awscdk.App;
 import software.amazon.awscdk.services.certificatemanager.Certificate;
-import java.util.Properties;
 
 public interface Configuration {
 
@@ -20,11 +18,7 @@ public interface Configuration {
         }
     }
 
-    static Entries create(App app, String appName){
-        var domain = (String) app.getNode().tryGetContext("domain");
-        if (domain == null || domain.isBlank()) {
-            domain = System.getenv("DOMAIN");
-        }
+    static Entries create(String domain, String appName){
         
         var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
         
