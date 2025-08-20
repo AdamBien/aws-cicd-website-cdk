@@ -13,10 +13,11 @@ public class CDKApp {
 
         var app = new App();
         var appName = "aws-website-cdk";
+        var entries = Configuration.create(app, appName);
         Tags.of(app).add("environment", "production");
+        Tags.of(app).add("domain", "production");
         Tags.of(app).add("application", appName);
 
-        var entries = Configuration.create(appName);
         var domainCertificate = new DomainCertificateStack(app, entries);
         var certificate = domainCertificate.getCertificate();
         var extendedEntries = entries.withCertificate(certificate);

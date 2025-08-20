@@ -9,13 +9,13 @@ import java.util.Properties;
 public interface ConfigurationLoader {
 
     String CONFIGURATION_FILE = "configuration.properties";
-    Properties CONFIGURATION = loadConfiguration();
 
-    static Properties loadConfiguration() {
+    static Properties loadConfigurationForDomain(String domain) {
         var properties = new Properties();
+        var configFileName = determineConfigFileName(domain);
         
         var userHome = System.getProperty("user.home");
-        var userConfigFile = Path.of(userHome, ".aws-website-cdk", CONFIGURATION_FILE);
+        var userConfigFile = Path.of(userHome, ".aws-website-cdk", configFileName);
         if (Files.exists(userConfigFile)) {
             try (var input = Files.newInputStream(userConfigFile)) {
                 properties.load(input);
@@ -26,7 +26,7 @@ public interface ConfigurationLoader {
             }
         }
         
-        var configFile = Path.of(CONFIGURATION_FILE);
+        var configFile = Path.of(configFileName);
         if (Files.exists(configFile)) {
             try (var input = Files.newInputStream(configFile)) {
                 properties.load(input);
@@ -37,16 +37,44 @@ public interface ConfigurationLoader {
             }
         }
         
+        // Fallback to default configuration file
+        if (!CONFIGURATION_FILE.equals(configFileName)) {
+            Log.info("Domain-specific configuration not found, trying default configuration");
+            return loadConfigurationForDomain(null);
+        }
+        
         Log.warning("No configuration file found in user home (~/.aws-website-cdk/) or project directory");
         return properties;
     }
     
+    static String determineConfigFileName(String domain) {
+        if (domain != null && !domain.isBlank()) {
+            return "configuration-" + domain + ".properties";
+        }
+        return CONFIGURATION_FILE;
+    }
+    
+    static String getProperty(Properties properties, String key, String defaultValue) {
+        return properties.getProperty(key, defaultValue);
+    }
+    
+    static String getRequiredProperty(Properties properties, String key) {
+        var value = properties.getProperty(key);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException("Required property '" + key + "' is not configured");
+        }
+        return value;
+    }
+    
+    // Backward compatibility methods - load default configuration
     static String getProperty(String key, String defaultValue) {
-        return CONFIGURATION.getProperty(key, defaultValue);
+        var properties = loadConfigurationForDomain(null);
+        return properties.getProperty(key, defaultValue);
     }
     
     static String getRequiredProperty(String key) {
-        var value = CONFIGURATION.getProperty(key);
+        var properties = loadConfigurationForDomain(null);
+        var value = properties.getProperty(key);
         if (value == null || value.isBlank()) {
             throw new IllegalStateException("Required property '" + key + "' is not configured");
         }
