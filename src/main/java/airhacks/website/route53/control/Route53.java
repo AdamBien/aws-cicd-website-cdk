@@ -1,6 +1,7 @@
 package airhacks.website.route53.control;
 
 import airhacks.website.Configuration;
+import airhacks.website.Configuration.CertificateValidation;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.services.cloudfront.Distribution;
 import software.amazon.awscdk.services.route53.ARecord;
@@ -13,7 +14,7 @@ import software.constructs.Construct;
 
 public interface Route53 {
 
-    static void setupAliasRecord(Construct scope, Distribution distribution, String domainName) {
+    static void setupAliasRecord(Construct scope, Distribution distribution,String domainName,CertificateValidation certificateConfiguration) {
         var hostedZone = HostedZone.Builder.create(scope, "HostedZone")
                 .zoneName(domainName)
                 .comment("zone for external domain")
@@ -30,8 +31,8 @@ public interface Route53 {
         CnameRecord.Builder.create(scope, "CertValidation")
                 .zone(hostedZone)
                 .comment("requested from ACM for validation")
-                .recordName(Configuration.CERT_VALIDATION_RECORD_NAME)
-                .domainName(Configuration.CERT_VALIDATION_DOMAIN_NAME)
+                .recordName(certificateConfiguration.recordName())
+                .domainName(certificateConfiguration.domainName())
                 .ttl(Duration.minutes(5))
                 .build();
     }
