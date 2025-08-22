@@ -6,6 +6,7 @@ import java.util.List;
 import airhacks.website.codebuild.control.GitRepository;
 import airhacks.website.codebuild.entity.WebsiteBuildConfiguration;
 import airhacks.website.Configuration;
+import airhacks.website.Configuration.BuildConfiguration;
 import airhacks.website.codebuild.control.BucketAccessingBuild;
 import airhacks.website.s3.control.Buckets;
 import software.amazon.awscdk.CfnOutput;
@@ -30,7 +31,7 @@ public class CodeBuildStack extends Stack{
     public static IBuildImage BUILD_IMAGE = LinuxBuildImage.STANDARD_7_0;
     static Artifact SOURCE_OUTPUT = Artifact.artifact("source");
 
-    public CodeBuildStack(Construct scope, String projectName,IBucket websiteBucket) {
+    public CodeBuildStack(Construct scope, String projectName,IBucket websiteBucket,BuildConfiguration buildConfiguration) {
                 super(scope, projectName + "-codepipeline");
         var logGroup = createLogGroup(projectName);
         var artifactBucket = Buckets.createPrivateBucket(this);
@@ -45,8 +46,8 @@ public class CodeBuildStack extends Stack{
                 .pipelineName(projectName)
                 .build();
         pipeline.addStage(createStage("github-checkout",
-                List.of(createGithubConnection(Configuration.codeStarConnectionARN,
-                        Configuration.gitRepository))));
+                List.of(createGithubConnection(buildConfiguration.codeStarConnectionARN(),
+                        buildConfiguration.gitRepository()))));
 
         var devActions = List.of(
                 createCodeBuildActionWithOutput(buildProject, SOURCE_OUTPUT, "build",

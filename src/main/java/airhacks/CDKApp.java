@@ -15,8 +15,9 @@ public class CDKApp {
         var appName = "aws-website-cdk";
         
         var domain = fetchDomain(app);
-        
-        var entries = Configuration.create(domain, appName);
+        var certificateConfiguration = Configuration.certificate(domain);
+        var entries = Configuration.domainEntries(domain, appName);
+        var buildConfiguration = Configuration.build(domain);
         Tags.of(app).add("environment", "production");
         Tags.of(app).add("domain", entries.domainName());
         Tags.of(app).add("application", appName);
@@ -24,9 +25,9 @@ public class CDKApp {
         var domainCertificate = new DomainCertificateStack(app, entries);
         var certificate = domainCertificate.getCertificate();
         var extendedEntries = entries.withCertificate(certificate);
-        var cloudfront = new CloudFrontStack(app, extendedEntries);
+        var cloudfront = new CloudFrontStack(app, extendedEntries,certificateConfiguration);
         var websiteBucket = cloudfront.getWebsiteBucket();
-        new CodeBuildStack(app, appName, websiteBucket);
+        new CodeBuildStack(app, appName, websiteBucket,buildConfiguration);
         app.synth();
     }
     

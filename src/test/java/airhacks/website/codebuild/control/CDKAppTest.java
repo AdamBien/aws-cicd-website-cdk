@@ -21,13 +21,14 @@ public class CDKAppTest {
     @Test
     public void stacks() throws IOException {
         App app = new App();
-        var entries = Configuration.create("test-app");
-
+        var domain = "airhacks.live";
+        var entries = Configuration.domainEntries(domain, "test-app");
+        var certificateConfiguration = Configuration.certificate(domain);
         var domainStack = new DomainCertificateStack(app, entries);
         var actual = JSON.valueToTree(app.synth().getStackArtifact(domainStack.getArtifactId()).getTemplate());
         assertThat(actual.get("Resources")).isNotEmpty();
 
-        var cloudFrontStack = new CloudFrontStack(app, entries);
+        var cloudFrontStack = new CloudFrontStack(app, entries,certificateConfiguration);
         actual = JSON.valueToTree(app.synth().getStackArtifact(cloudFrontStack.getArtifactId()).getTemplate());
         assertThat(actual.get("Resources")).isNotEmpty();
     }

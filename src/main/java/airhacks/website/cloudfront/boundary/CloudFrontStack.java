@@ -3,6 +3,7 @@ package airhacks.website.cloudfront.boundary;
 import java.util.List;
 
 import airhacks.website.Stacks;
+import airhacks.website.Configuration.CertificateValidation;
 import airhacks.website.Configuration.Entries;
 import airhacks.website.iam.IAMConstructs;
 import airhacks.website.route53.control.Route53;
@@ -25,7 +26,7 @@ public class CloudFrontStack extends Stack {
         Distribution distribution;
         Bucket websiteBucket;
 
-        public CloudFrontStack(Construct scope, Entries configuration) {
+        public CloudFrontStack(Construct scope, Entries configuration,CertificateValidation certificateConfiguration) {
                 super(scope, configuration.appName() + "-cloudfront",Stacks.EU_CENTRAL_1);
 
                 this.websiteBucket = Buckets.createWebsiteBucket(this, configuration.domainName());
@@ -37,7 +38,7 @@ public class CloudFrontStack extends Stack {
                                 .originAccessIdentity(oai)
                                 .build();
                 this.distribution = this.createCloudFrontDistribution(configuration, s3Origin);                
-                Route53.setupAliasRecord(this, this.distribution, configuration.domainName());
+                Route53.setupAliasRecord(this, this.distribution, configuration.domainName(),certificateConfiguration);
                 Tags.of(websiteBucket).add("component", "bucket for static assets");
                 Tags.of(websiteBucket).add("domain", configuration.domainName());
                 CfnOutput.Builder.create(this, "CloudFrontDistributionDomainNameOutput").value(this.distribution.getDistributionDomainName()).build();
