@@ -6,9 +6,9 @@ import software.amazon.awscdk.services.certificatemanager.Certificate;
 
 public interface Configuration {
 
-    public record Entries(String appName, String domainName, Certificate certificate) {
-        public Entries withCertificate(Certificate certificate) {
-            return new Entries(this.appName, this.domainName, certificate);
+    public record EntriesConfiguration(String appName, String domainName, Certificate certificate) {
+        public EntriesConfiguration withCertificate(Certificate certificate) {
+            return new EntriesConfiguration(this.appName, this.domainName, certificate);
         }
     }
     
@@ -17,13 +17,13 @@ public interface Configuration {
                                     GitRepository gitRepository) {
     }
     
-    public record CertificateValidation(String recordName, String domainName) {
+    public record CertificateValidationConfiguration(String recordName, String domainName) {
     }
 
-    static Entries domainEntries(String domain, String appName) {
+    static EntriesConfiguration domainEntries(String domain, String appName) {
         var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
         var domainName = ConfigurationLoader.getProperty(properties, "domain.name", "");
-        return new Entries(appName, domainName, null);
+        return new EntriesConfiguration(appName, domainName, null);
     }
     
     static BuildConfiguration build(String domain) {
@@ -36,10 +36,10 @@ public interface Configuration {
         return new BuildConfiguration(codeStarConnectionARN, owner, repository, branch, gitRepository);
     }
     
-    static CertificateValidation certificate(String domain) {
+    static CertificateValidationConfiguration certificate(String domain) {
         var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
         var recordName = ConfigurationLoader.getProperty(properties, "cert.validation.record.name", null);
         var domainName = ConfigurationLoader.getProperty(properties, "cert.validation.domain.name", null);
-        return new CertificateValidation(recordName, domainName);
+        return new CertificateValidationConfiguration(recordName, domainName);
     }
 }

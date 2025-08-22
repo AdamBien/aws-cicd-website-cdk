@@ -1,7 +1,7 @@
 package airhacks.website.certificate.boundary;
 
 import airhacks.website.Stacks;
-import airhacks.website.Configuration.Entries;
+import airhacks.website.Configuration.EntriesConfiguration;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.services.certificatemanager.Certificate;
 import software.amazon.awscdk.services.certificatemanager.CertificateValidation;
@@ -11,7 +11,7 @@ public class DomainCertificateStack extends Stack {
 
     Certificate certificate;
 
-    public DomainCertificateStack(Construct scope, Entries configuration) {
+    public DomainCertificateStack(Construct scope, EntriesConfiguration configuration) {
         super(scope, configuration.appName() + "-certificate", Stacks.US_EAST_1); 
         this.certificate = this.createCertificate(configuration.domainName());
     }

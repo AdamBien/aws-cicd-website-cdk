@@ -3,8 +3,8 @@ package airhacks.website.cloudfront.boundary;
 import java.util.List;
 
 import airhacks.website.Stacks;
-import airhacks.website.Configuration.CertificateValidation;
-import airhacks.website.Configuration.Entries;
+import airhacks.website.Configuration.CertificateValidationConfiguration;
+import airhacks.website.Configuration.EntriesConfiguration;
 import airhacks.website.iam.IAMConstructs;
 import airhacks.website.route53.control.Route53;
 import airhacks.website.s3.control.Buckets;
@@ -26,7 +26,7 @@ public class CloudFrontStack extends Stack {
         Distribution distribution;
         Bucket websiteBucket;
 
-        public CloudFrontStack(Construct scope, Entries configuration,CertificateValidation certificateConfiguration) {
+        public CloudFrontStack(Construct scope, EntriesConfiguration configuration,CertificateValidationConfiguration certificateConfiguration) {
                 super(scope, configuration.appName() + "-cloudfront",Stacks.EU_CENTRAL_1);
 
                 this.websiteBucket = Buckets.createWebsiteBucket(this, configuration.domainName());
@@ -44,7 +44,7 @@ public class CloudFrontStack extends Stack {
                 CfnOutput.Builder.create(this, "CloudFrontDistributionDomainNameOutput").value(this.distribution.getDistributionDomainName()).build();
         }
 
-        Distribution createCloudFrontDistribution(Entries entries,
+        Distribution createCloudFrontDistribution(EntriesConfiguration entries,
                         S3Origin s3Origin) {
                 var domainName = entries.domainName();
                 var certificate = entries.certificate();
