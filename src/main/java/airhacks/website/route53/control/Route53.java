@@ -15,6 +15,11 @@ import software.constructs.Construct;
 public interface Route53 {
 
     static void setupAliasRecord(Construct scope, Distribution distribution,String domainName,CertificateValidationConfiguration certificateConfiguration) {
+        if (certificateConfiguration.externalDnsProvider()) {
+            // Skip Route53 setup for external DNS providers
+            return;
+        }
+        
         var hostedZone = HostedZone.Builder.create(scope, "HostedZone")
                 .zoneName(domainName)
                 .comment("zone for external domain")

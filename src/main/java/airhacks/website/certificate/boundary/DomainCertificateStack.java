@@ -16,6 +16,11 @@ public class DomainCertificateStack extends Stack {
         this.certificate = this.createCertificate(configuration.domainName());
     }
 
+    /**
+     * https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html
+     * @param domainName
+     * @return
+     */
     Certificate createCertificate(String domainName) {
         return Certificate.Builder.create(this, "DnsValidatedCertificate")
                 .domainName(domainName)

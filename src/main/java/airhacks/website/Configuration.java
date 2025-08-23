@@ -17,7 +17,7 @@ public interface Configuration {
                                     GitRepository gitRepository) {
     }
     
-    public record CertificateValidationConfiguration(String recordName, String domainName) {
+    public record CertificateValidationConfiguration(String recordName, String domainName, boolean externalDnsProvider) {
     }
 
     static EntriesConfiguration domainEntries(String domain, String appName) {
@@ -40,6 +40,7 @@ public interface Configuration {
         var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
         var recordName = ConfigurationLoader.getProperty(properties, "cert.validation.record.name", null);
         var domainName = ConfigurationLoader.getProperty(properties, "cert.validation.domain.name", null);
-        return new CertificateValidationConfiguration(recordName, domainName);
+        var externalDnsProvider = Boolean.parseBoolean(ConfigurationLoader.getProperty(properties, "external.dns.provider", "false"));
+        return new CertificateValidationConfiguration(recordName, domainName, externalDnsProvider);
     }
 }
