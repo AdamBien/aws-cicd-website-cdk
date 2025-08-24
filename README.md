@@ -16,6 +16,25 @@ AWS CDK application for deploying static websites with CloudFront, S3, and CI/CD
 - AWS CDK CLI installed (`npm install -g aws-cdk`)
 - Java 21+
 - Maven
+- AWS account bootstrapped for CDK (see Bootstrap section)
+
+## CDK Bootstrap
+
+Before first deployment, bootstrap your AWS account for CDK. This creates the necessary resources (S3 bucket, IAM roles) for CDK deployments.
+
+
+### Bootstrap for CloudFront (requires us-east-1):
+```bash
+# Bootstrap both your main region and us-east-1
+cdk bootstrap aws://ACCOUNT-NUMBER/us-east-1
+cdk bootstrap aws://ACCOUNT-NUMBER/eu-central-1
+```
+
+
+### Check bootstrap status:
+```bash
+aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1
+```
 
 ## Configuration
 
