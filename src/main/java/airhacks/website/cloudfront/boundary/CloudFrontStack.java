@@ -37,7 +37,7 @@ public class CloudFrontStack extends Stack {
                                 .create(websiteBucket)
                                 .originAccessIdentity(oai)
                                 .build();
-                this.distribution = this.createCloudFrontDistribution(configuration, s3Origin);                
+                this.distribution = this.createCloudFrontDistribution(configuration, s3Origin);
                 Route53.setupAliasRecord(this, this.distribution, configuration.domainName(),certificateConfiguration);
                 Tags.of(websiteBucket).add("component", "bucket for static assets");
                 Tags.of(websiteBucket).add("domain", configuration.domainName());
