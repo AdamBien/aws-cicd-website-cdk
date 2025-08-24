@@ -1,5 +1,6 @@
 package airhacks.website.configuration.control;
 
+import airhacks.CDKApp;
 import airhacks.website.log.control.Log;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,7 +15,7 @@ public interface ConfigurationLoader {
         var configFileName = determineConfigFileName(domain);
         
         var userHome = System.getProperty("user.home");
-        var userConfigFile = Path.of(userHome, ".aws-website-cdk", configFileName);
+        var userConfigFile = Path.of(userHome, CDKApp.name, configFileName);
         if (Files.exists(userConfigFile)) {
             try (var input = Files.newInputStream(userConfigFile)) {
                 properties.load(input);

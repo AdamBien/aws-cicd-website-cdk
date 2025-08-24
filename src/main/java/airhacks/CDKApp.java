@@ -7,27 +7,27 @@ import airhacks.website.codebuild.boundary.CodeBuildStack;
 import software.amazon.awscdk.App;
 import software.amazon.awscdk.Tags;
 
-public class CDKApp {
+public interface CDKApp {
+    String name = "aws-cicd-website-cdk";
 
-    public static void main(final String[] args) {
+    static void main(String... args) {
 
         var app = new App();
-        var appName = "aws-website-cdk";
         
         var domain = fetchDomain(app);
         var certificateConfiguration = Configuration.certificate(domain);
-        var entries = Configuration.domainEntries(domain, appName);
+        var entries = Configuration.domainEntries(domain, name);
         var buildConfiguration = Configuration.build(domain);
         Tags.of(app).add("environment", "production");
         Tags.of(app).add("domain", entries.domainName());
-        Tags.of(app).add("application", appName);
+        Tags.of(app).add("application", name);
 
         var domainCertificate = new DomainCertificateStack(app, entries);
         var certificate = domainCertificate.getCertificate();
         var extendedEntries = entries.withCertificate(certificate);
         var cloudfront = new CloudFrontStack(app, extendedEntries,certificateConfiguration);
         var websiteBucket = cloudfront.getWebsiteBucket();
-        new CodeBuildStack(app, appName, websiteBucket,buildConfiguration);
+        new CodeBuildStack(app, name, websiteBucket,buildConfiguration);
         app.synth();
     }
     
