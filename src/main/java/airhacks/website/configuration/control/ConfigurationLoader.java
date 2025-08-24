@@ -38,7 +38,7 @@ public interface ConfigurationLoader {
             }
         }
                 
-        Log.warning("No configuration file found in user home (~/.aws-website-cdk/) or project directory");
+        Log.warning("No configuration %s found in user home (~/%s/) or project directory".formatted(userConfigFile,CDKApp.name));
         return properties;
     }
     
