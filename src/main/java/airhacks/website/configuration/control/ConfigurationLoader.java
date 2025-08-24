@@ -12,7 +12,7 @@ public interface ConfigurationLoader {
 
     static Properties loadConfigurationForDomain(String domain) {
         var properties = new Properties();
-        var configFileName = determineConfigFileName(domain);
+        var configFileName = domain + ".properties";
         
         var userHome = System.getProperty("user.home");
         var userConfigFile = Path.of(userHome, CDKApp.name, configFileName);
@@ -42,9 +42,6 @@ public interface ConfigurationLoader {
         return properties;
     }
     
-    static String determineConfigFileName(String domain) {
-            return "configuration-" + domain + ".properties";
-    }
     
     static String getProperty(Properties properties, String key, String defaultValue) {
         return properties.getProperty(key, defaultValue);
