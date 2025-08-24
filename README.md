@@ -78,7 +78,7 @@ cdk deploy --context domain=example.com
 ### With external DNS provider:
 1. Set `external.dns.provider=true` in configuration
 2. Deploy: `cdk deploy --context domain=example.com`
-3. Add CNAME validation record to your DNS provider
+3. Add CNAME validation record from us-east-1 ACM to your DNS provider
 4. Wait for certificate validation to complete
 5. Add CloudFront distribution CNAME/A records to your DNS provider
 
@@ -92,7 +92,8 @@ DOMAIN=example.com cdk deploy
 When using providers like Hover:
 
 1. **Certificate Validation**: Add the ACM validation CNAME record
-   - Find records in AWS Certificate Manager console
+   - The certificate and validation CNAME are created in us-east-1 region
+   - Find records in AWS Certificate Manager console (us-east-1)
    - Add to your DNS provider within 72 hours
    - Keep the record for automatic renewal
 
