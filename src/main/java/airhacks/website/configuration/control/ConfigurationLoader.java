@@ -13,9 +13,9 @@ public interface ConfigurationLoader {
     static Properties loadConfigurationForDomain(String domain) {
         var properties = new Properties();
         var configFileName = domain + ".properties";
-        
+        var configurationFolder = "." + CDKApp.name;
         var userHome = System.getProperty("user.home");
-        var userConfigFile = Path.of(userHome, CDKApp.name, configFileName);
+        var userConfigFile = Path.of(userHome, configurationFolder, configFileName);
         if (Files.exists(userConfigFile)) {
             try (var input = Files.newInputStream(userConfigFile)) {
                 properties.load(input);
