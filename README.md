@@ -22,6 +22,7 @@ AWS CDK application for deploying static websites with CloudFront, S3, and CI/CD
 
 Before first deployment, bootstrap your AWS account for CDK. This creates the necessary resources (S3 bucket, IAM roles) for CDK deployments.
 
+**Important**: This project creates certificates for CloudFront, which must be in the us-east-1 region. Always bootstrap us-east-1 regardless of your primary region.
 
 ### Bootstrap for CloudFront (requires us-east-1):
 ```bash
@@ -115,6 +116,7 @@ When using providers like Hover:
 
 ## Notes
 
-- Certificates for CloudFront must be created in us-east-1 region
+- **CloudFront Certificates**: ACM certificates used with CloudFront distributions must be created in the us-east-1 region. The `DomainCertificateStack` automatically deploys to us-east-1 for this reason
 - Stack deployment waits for DNS validation when using external providers
 - Configuration files in user directory take precedence over project directory
+- The certificate stack is deployed separately in us-east-1 while other resources can be in your preferred region
