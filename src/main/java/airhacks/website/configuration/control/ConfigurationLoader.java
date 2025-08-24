@@ -8,7 +8,6 @@ import java.util.Properties;
 
 public interface ConfigurationLoader {
 
-    String CONFIGURATION_FILE = "configuration.properties";
 
     static Properties loadConfigurationForDomain(String domain) {
         var properties = new Properties();
@@ -22,7 +21,8 @@ public interface ConfigurationLoader {
                 Log.info("Loaded configuration from user directory: " + userConfigFile.toAbsolutePath());
                 return properties;
             } catch (IOException e) {
-                Log.error("Failed to load configuration from user directory: " + e.getMessage());
+                Log.error("Failed to load configuration from user directory: " + userConfigFile);
+                throw new IllegalStateException(userConfigFile + " does not exist");
             }
         }
         
@@ -36,22 +36,13 @@ public interface ConfigurationLoader {
                 Log.error("Failed to load configuration from project directory: " + e.getMessage());
             }
         }
-        
-        // Fallback to default configuration file
-        if (!CONFIGURATION_FILE.equals(configFileName)) {
-            Log.info("Domain-specific configuration not found, trying default configuration");
-            return loadConfigurationForDomain(null);
-        }
-        
+                
         Log.warning("No configuration file found in user home (~/.aws-website-cdk/) or project directory");
         return properties;
     }
     
     static String determineConfigFileName(String domain) {
-        if (domain != null && !domain.isBlank()) {
             return "configuration-" + domain + ".properties";
-        }
-        return CONFIGURATION_FILE;
     }
     
     static String getProperty(Properties properties, String key, String defaultValue) {
