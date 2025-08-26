@@ -25,7 +25,7 @@ public class DomainCertificateStack extends Stack {
         var wildcardDomain = "*."+domainName;
         return Certificate.Builder.create(this, "DnsValidatedCertificate")
                 .domainName(wildcardDomain)
-                .certificateName(wildcardDomain)
+                .certificateName(domainName)
                 .validation(CertificateValidation.fromDns())
                 .build();
     }
