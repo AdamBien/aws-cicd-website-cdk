@@ -5,8 +5,8 @@ import java.util.List;
 
 import airhacks.website.Configuration.BuildConfiguration;
 import airhacks.website.Configuration.DomainEntriesConfiguration;
-import airhacks.website.codebuild.control.BucketAccessingBuild;
 import airhacks.website.codebuild.control.GitRepository;
+import airhacks.website.codebuild.control.PublishingStage;
 import airhacks.website.codebuild.entity.WebsiteBuildConfiguration;
 import airhacks.website.s3.control.Buckets;
 import software.amazon.awscdk.CfnOutput;
@@ -38,10 +38,8 @@ public class CodePipelineStack extends Stack{
         var logGroup = createLogGroup(appName);
         var artifactBucket = Buckets.createPrivateBucket(this);
         var domainName = websiteBucket.getBucketName();
-        var buildSpec = WebsiteBuildConfiguration.createBuildSpec(domainName);
-        var buildStack = new BucketAccessingBuild(this, appName, artifactBucket,websiteBucket, logGroup,buildSpec);
-                
-        var buildProject = buildStack.getPipelineProject();
+        var buildSpec = WebsiteBuildConfiguration.createBuildSpec(domainName);                
+        var buildProject = PublishingStage.create(this, appName, artifactBucket,websiteBucket, logGroup,buildSpec);
         var pipeline = Pipeline.Builder.create(this, appName + "Pipeline")
                 .crossAccountKeys(false)
                 .artifactBucket(artifactBucket)
@@ -54,7 +52,7 @@ public class CodePipelineStack extends Stack{
         var devActions = List.of(
                 createCodeBuildActionWithOutput(buildProject, SOURCE_OUTPUT, "build",
                         CodeBuildActionType.BUILD, 1));
-        pipeline.addStage(createStage("DEV", devActions));
+        pipeline.addStage(createStage("publish", devActions));
 
         CfnOutput.Builder.create(this, "PipelineOutput").value(pipeline.getPipelineArn()).build();
     }

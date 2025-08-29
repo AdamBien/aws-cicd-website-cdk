@@ -3,7 +3,6 @@ package airhacks;
 import airhacks.website.Configuration;
 import airhacks.website.certificate.boundary.DomainCertificateStack;
 import airhacks.website.cloudfront.boundary.CloudFrontStack;
-import airhacks.website.codebuild.boundary.CodeBuildStack;
 import airhacks.website.codebuild.boundary.CodePipelineStack;
 import software.amazon.awscdk.App;
 import software.amazon.awscdk.Tags;

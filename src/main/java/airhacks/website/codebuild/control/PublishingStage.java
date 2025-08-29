@@ -1,6 +1,5 @@
 package airhacks.website.codebuild.control;
 
-import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.services.codebuild.BuildEnvironment;
 import software.amazon.awscdk.services.codebuild.BuildSpec;
 import software.amazon.awscdk.services.codebuild.Cache;
@@ -9,21 +8,17 @@ import software.amazon.awscdk.services.codebuild.ComputeType;
 import software.amazon.awscdk.services.codebuild.LinuxBuildImage;
 import software.amazon.awscdk.services.codebuild.LoggingOptions;
 import software.amazon.awscdk.services.codebuild.PipelineProject;
-import software.amazon.awscdk.services.codebuild.Project;
 import software.amazon.awscdk.services.logs.ILogGroup;
 import software.amazon.awscdk.services.s3.IBucket;
 import software.constructs.Construct;
 
-public class BucketAccessingBuild extends Construct {
+public interface PublishingStage{
 
-        PipelineProject pipelineProject;
 
-        public BucketAccessingBuild(Construct scope, String projectName,
+        public static PipelineProject create(Construct scope, String projectName,
                         IBucket sourceBucket, IBucket websiteBucket,ILogGroup logGroup, BuildSpec buildSpec) {
-                super(scope, "BucketAccessingBuild");
-                this.getNode().addDependency(logGroup);
-                this.pipelineProject = PipelineProject.Builder
-                                .create(this, "PipelineProject")
+                var pipelineProject = PipelineProject.Builder
+                                .create(scope, "PipelineProject")
                                 .cache(Cache.none())
                                 .buildSpec(buildSpec)
                                 .projectName(projectName)
@@ -38,21 +33,16 @@ public class BucketAccessingBuild extends Construct {
                 sourceBucket.grantReadWrite(serviceRole);
                 websiteBucket.grantReadWrite(serviceRole);
                 logGroup.grantWrite(serviceRole);
-
-                CfnOutput.Builder.create(this, "ServiceRoleARN").value(serviceRole.getRoleArn()).build();
+                return pipelineProject;
         }
 
-        LoggingOptions getLoggingOptions(ILogGroup logGroup) {
+        static LoggingOptions getLoggingOptions(ILogGroup logGroup) {
                 return LoggingOptions.builder()
                                 .cloudWatch(CloudWatchLoggingOptions.builder()
                                                 .logGroup(logGroup)
                                                 .enabled(true)
                                                 .build())
                                 .build();
-        }
-
-        public Project getPipelineProject() {
-                return this.pipelineProject;
         }
 
 }

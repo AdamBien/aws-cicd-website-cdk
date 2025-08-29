@@ -20,8 +20,8 @@ public interface WebsiteBuildConfiguration {
     static List<String> commands(String domainName) {
         return """
                 echo "publishing static assets to %1$s"
-                aws s3 rm s3://%1$s --recursive
                 echo "emptying bucket ${appname}"
+                aws s3 rm s3://%1$s --recursive
                 aws s3 cp . s3://%1$s --recursive
                 """
                 .formatted(domainName)
