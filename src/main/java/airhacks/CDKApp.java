@@ -4,6 +4,7 @@ import airhacks.website.Configuration;
 import airhacks.website.certificate.boundary.DomainCertificateStack;
 import airhacks.website.cloudfront.boundary.CloudFrontStack;
 import airhacks.website.codebuild.boundary.CodeBuildStack;
+import airhacks.website.codebuild.boundary.CodePipelineStack;
 import software.amazon.awscdk.App;
 import software.amazon.awscdk.Tags;
 
@@ -27,7 +28,7 @@ public interface CDKApp {
         var extendedEntries = domainEntriesConfiguration.withCertificate(certificate);
         var cloudfront = new CloudFrontStack(app, extendedEntries,certificateConfiguration);
         var websiteBucket = cloudfront.getWebsiteBucket();
-        new CodeBuildStack(app, domainEntriesConfiguration, websiteBucket,buildConfiguration);
+        new CodePipelineStack(app, domainEntriesConfiguration, websiteBucket,buildConfiguration);
         app.synth();
     }
     

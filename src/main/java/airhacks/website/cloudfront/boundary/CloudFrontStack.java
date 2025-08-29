@@ -23,11 +23,13 @@ import software.constructs.Construct;
 
 public class CloudFrontStack extends Stack {
 
+        static String stackName = "cloudfront";
+
         Distribution distribution;
         Bucket websiteBucket;
 
         public CloudFrontStack(Construct scope, DomainEntriesConfiguration configuration,CertificateValidationConfiguration certificateConfiguration) {
-                super(scope, configuration.appNameWithDomain() + "-cloudfront",Stacks.EU_CENTRAL_1);
+                super(scope, configuration.appNameWithDomain(stackName),Stacks.EU_CENTRAL_1);
 
                 this.websiteBucket = Buckets.createWebsiteBucket(this, configuration.domainName());
                 var oai = new OriginAccessIdentity(this, "CloudFrontOriginAccessIdentity");

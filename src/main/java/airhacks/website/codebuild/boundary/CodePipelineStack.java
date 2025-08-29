@@ -26,13 +26,14 @@ import software.amazon.awscdk.services.logs.RetentionDays;
 import software.amazon.awscdk.services.s3.IBucket;
 import software.constructs.Construct;
 
-public class CodeBuildStack extends Stack{
+public class CodePipelineStack extends Stack{
 
-    public static IBuildImage BUILD_IMAGE = LinuxBuildImage.STANDARD_7_0;
+    static String stackName = "codepipeline";
+    static IBuildImage BUILD_IMAGE = LinuxBuildImage.STANDARD_7_0;
     static Artifact SOURCE_OUTPUT = Artifact.artifact("source");
 
-    public CodeBuildStack(Construct scope, DomainEntriesConfiguration domainConfiguration,IBucket websiteBucket,BuildConfiguration buildConfiguration) {
-                super(scope, domainConfiguration.appNameWithDomain() + "-codepipeline");
+    public CodePipelineStack(Construct scope, DomainEntriesConfiguration domainConfiguration,IBucket websiteBucket,BuildConfiguration buildConfiguration) {
+                super(scope, domainConfiguration.appNameWithDomain(stackName));
         var appName = domainConfiguration.appName();
         var logGroup = createLogGroup(appName);
         var artifactBucket = Buckets.createPrivateBucket(this);
@@ -57,10 +58,6 @@ public class CodeBuildStack extends Stack{
 
         CfnOutput.Builder.create(this, "PipelineOutput").value(pipeline.getPipelineArn()).build();
     }
-
-
-
-
 
     IAction createCodeBuildActionWithOutput(IProject project, Artifact input, String actionName,
             CodeBuildActionType actionType, int runOrder) {
@@ -98,7 +95,6 @@ public class CodeBuildStack extends Stack{
                 .logGroupName("/codepipeline/" + project + "/build")
                 .retention(RetentionDays.FIVE_DAYS)
                 .build();
-
     }    
-    
+
 }
