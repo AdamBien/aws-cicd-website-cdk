@@ -7,6 +7,7 @@ import airhacks.website.codebuild.control.GitRepository;
 import airhacks.website.codebuild.entity.WebsiteBuildConfiguration;
 import airhacks.website.Configuration;
 import airhacks.website.Configuration.BuildConfiguration;
+import airhacks.website.Configuration.DomainEntriesConfiguration;
 import airhacks.website.codebuild.control.BucketAccessingBuild;
 import airhacks.website.s3.control.Buckets;
 import software.amazon.awscdk.CfnOutput;
@@ -31,19 +32,20 @@ public class CodeBuildStack extends Stack{
     public static IBuildImage BUILD_IMAGE = LinuxBuildImage.STANDARD_7_0;
     static Artifact SOURCE_OUTPUT = Artifact.artifact("source");
 
-    public CodeBuildStack(Construct scope, String projectName,IBucket websiteBucket,BuildConfiguration buildConfiguration) {
-                super(scope, projectName + "-codepipeline");
-        var logGroup = createLogGroup(projectName);
+    public CodeBuildStack(Construct scope, DomainEntriesConfiguration domainConfiguration,IBucket websiteBucket,BuildConfiguration buildConfiguration) {
+                super(scope, domainConfiguration.appNameWithDomain() + "-codepipeline");
+        var appName = domainConfiguration.appName();
+        var logGroup = createLogGroup(appName);
         var artifactBucket = Buckets.createPrivateBucket(this);
         var domainName = websiteBucket.getBucketName();
         var buildSpec = WebsiteBuildConfiguration.createBuildSpec(domainName);
-        var buildStack = new BucketAccessingBuild(this, projectName, artifactBucket,websiteBucket, logGroup,buildSpec);
+        var buildStack = new BucketAccessingBuild(this, appName, artifactBucket,websiteBucket, logGroup,buildSpec);
                 
         var buildProject = buildStack.getPipelineProject();
-        var pipeline = Pipeline.Builder.create(this, projectName + "Pipeline")
+        var pipeline = Pipeline.Builder.create(this, appName + "Pipeline")
                 .crossAccountKeys(false)
                 .artifactBucket(artifactBucket)
-                .pipelineName(projectName)
+                .pipelineName(appName)
                 .build();
         pipeline.addStage(createStage("github-checkout",
                 List.of(createGithubConnection(buildConfiguration.codeStarConnectionARN(),

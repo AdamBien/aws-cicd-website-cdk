@@ -6,9 +6,9 @@ import software.amazon.awscdk.services.certificatemanager.Certificate;
 
 public interface Configuration {
 
-    public record EntriesConfiguration(String appName, String domainName, Certificate certificate) {
-        public EntriesConfiguration withCertificate(Certificate certificate) {
-            return new EntriesConfiguration(this.appName, this.domainName, certificate);
+    public record DomainEntriesConfiguration(String appName, String domainName, Certificate certificate) {
+        public DomainEntriesConfiguration withCertificate(Certificate certificate) {
+            return new DomainEntriesConfiguration(this.appName, this.domainName, certificate);
         }
 
         public String appNameWithDomain(){
@@ -16,7 +16,9 @@ public interface Configuration {
         }
     }
     
-    public record BuildConfiguration(String codeStarConnectionARN, String owner, 
+    public record BuildConfiguration(String domainName,
+                                    String codeStarConnectionARN, 
+                                    String owner, 
                                     String repository, String branch, 
                                     GitRepository gitRepository) {
     }
@@ -24,20 +26,20 @@ public interface Configuration {
     public record CertificateValidationConfiguration(String recordName, String domainName, boolean externalDnsProvider) {
     }
 
-    static EntriesConfiguration domainEntries(String domain, String appName) {
+    static DomainEntriesConfiguration domainEntries(String domain, String appName) {
         var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
         var domainName = ConfigurationLoader.getProperty(properties, "domain.name", "");
-        return new EntriesConfiguration(appName, domainName, null);
+        return new DomainEntriesConfiguration(appName, domainName, null);
     }
     
-    static BuildConfiguration build(String domain) {
-        var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
+    static BuildConfiguration build(String domainName) {
+        var properties = ConfigurationLoader.loadConfigurationForDomain(domainName);
         var codeStarConnectionARN = ConfigurationLoader.getProperty(properties, "codestar.connection.arn", "arn:aws:codestar-connections:");
         var owner = ConfigurationLoader.getProperty(properties, "git.owner", "");
         var repository = ConfigurationLoader.getProperty(properties, "git.repository", "");
         var branch = ConfigurationLoader.getProperty(properties, "git.branch", "main");
         var gitRepository = new GitRepository(owner, repository, branch);
-        return new BuildConfiguration(codeStarConnectionARN, owner, repository, branch, gitRepository);
+        return new BuildConfiguration(domainName,codeStarConnectionARN, owner, repository, branch, gitRepository);
     }
     
     static CertificateValidationConfiguration certificate(String domain) {

@@ -16,18 +16,18 @@ public interface CDKApp {
         
         var domain = fetchDomain(app);
         var certificateConfiguration = Configuration.certificate(domain);
-        var entries = Configuration.domainEntries(domain, name);
+        var domainEntriesConfiguration = Configuration.domainEntries(domain, name);
         var buildConfiguration = Configuration.build(domain);
         Tags.of(app).add("environment", "production");
-        Tags.of(app).add("domain", entries.domainName());
+        Tags.of(app).add("domain", domainEntriesConfiguration.domainName());
         Tags.of(app).add("application", name);
 
-        var domainCertificate = new DomainCertificateStack(app, entries);
+        var domainCertificate = new DomainCertificateStack(app, domainEntriesConfiguration);
         var certificate = domainCertificate.getCertificate();
-        var extendedEntries = entries.withCertificate(certificate);
+        var extendedEntries = domainEntriesConfiguration.withCertificate(certificate);
         var cloudfront = new CloudFrontStack(app, extendedEntries,certificateConfiguration);
         var websiteBucket = cloudfront.getWebsiteBucket();
-        new CodeBuildStack(app, name, websiteBucket,buildConfiguration);
+        new CodeBuildStack(app, domainEntriesConfiguration, websiteBucket,buildConfiguration);
         app.synth();
     }
     
