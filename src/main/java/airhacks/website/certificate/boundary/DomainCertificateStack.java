@@ -12,9 +12,9 @@ import software.constructs.Construct;
 public class DomainCertificateStack extends Stack {
 
     Certificate certificate;
-
+    static String stackName = "certificate";
     public DomainCertificateStack(Construct scope, DomainEntriesConfiguration configuration) {
-        super(scope, configuration.appNameWithDomain() + "-certificate", Stacks.US_EAST_1); 
+        super(scope, configuration.appNameWithDomain(stackName), Stacks.US_EAST_1); 
         this.certificate = this.createCertificate(configuration.domainName());
     }
 
