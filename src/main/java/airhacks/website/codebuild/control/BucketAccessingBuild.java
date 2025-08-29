@@ -1,8 +1,6 @@
 package airhacks.website.codebuild.control;
 
-import airhacks.website.Configuration;
 import software.amazon.awscdk.CfnOutput;
-import software.amazon.awscdk.NestedStack;
 import software.amazon.awscdk.services.codebuild.BuildEnvironment;
 import software.amazon.awscdk.services.codebuild.BuildSpec;
 import software.amazon.awscdk.services.codebuild.Cache;
@@ -16,7 +14,7 @@ import software.amazon.awscdk.services.logs.ILogGroup;
 import software.amazon.awscdk.services.s3.IBucket;
 import software.constructs.Construct;
 
-public class BucketAccessingBuild extends NestedStack {
+public class BucketAccessingBuild extends Construct {
 
         PipelineProject pipelineProject;
 
