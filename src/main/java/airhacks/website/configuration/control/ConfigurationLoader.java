@@ -13,7 +13,7 @@ public interface ConfigurationLoader {
     static Properties loadConfigurationForDomain(String domain) {
         var properties = new Properties();
         var configFileName = domain + ".properties";
-        var configurationFolder = "." + CDKApp.name;
+        var configurationFolder = "." + CDKApp.projectName;
         var userHome = System.getProperty("user.home");
         var userConfigFile = Path.of(userHome, configurationFolder, configFileName);
         if (Files.exists(userConfigFile)) {
@@ -38,7 +38,7 @@ public interface ConfigurationLoader {
             }
         }
                 
-        Log.warning("No configuration %s found in user home (~/%s/) or project directory".formatted(userConfigFile,CDKApp.name));
+        Log.warning("No configuration %s found in user home (~/%s/) or project directory".formatted(userConfigFile,CDKApp.shortName));
         return properties;
     }
     

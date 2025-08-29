@@ -8,7 +8,8 @@ import software.amazon.awscdk.App;
 import software.amazon.awscdk.Tags;
 
 public interface CDKApp {
-    String name = "aws-cicd-website-cdk";
+    String shortName = "cicd-website";
+    String projectName = "aws-%s-cdk".formatted(shortName);
 
     static void main(String... args) {
 
@@ -16,11 +17,11 @@ public interface CDKApp {
         
         var domain = fetchDomain(app);
         var certificateConfiguration = Configuration.certificate(domain);
-        var domainEntriesConfiguration = Configuration.domainEntries(domain, name);
+        var domainEntriesConfiguration = Configuration.domainEntries(domain, shortName);
         var buildConfiguration = Configuration.build(domain);
         Tags.of(app).add("environment", "production");
         Tags.of(app).add("domain", domainEntriesConfiguration.domainName());
-        Tags.of(app).add("application", name);
+        Tags.of(app).add("application", shortName);
 
         var domainCertificate = new DomainCertificateStack(app, domainEntriesConfiguration);
         var certificate = domainCertificate.getCertificate();
@@ -38,7 +39,6 @@ public interface CDKApp {
         } else {
             System.out.println("No domain specified, using default configuration");
         }
-
         return domain;
     }
 }
