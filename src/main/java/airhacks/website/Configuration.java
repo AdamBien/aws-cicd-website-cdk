@@ -16,8 +16,7 @@ public interface Configuration {
         }
     }
     
-    public record BuildConfiguration(String domainName,
-                                    String codeStarConnectionARN, 
+    public record BuildConfiguration(String codeStarConnectionARN, 
                                     String owner, 
                                     String repository, String branch, 
                                     GitRepository gitRepository) {
@@ -39,7 +38,7 @@ public interface Configuration {
         var repository = ConfigurationLoader.getProperty(properties, "git.repository", "");
         var branch = ConfigurationLoader.getProperty(properties, "git.branch", "main");
         var gitRepository = new GitRepository(owner, repository, branch);
-        return new BuildConfiguration(domainName,codeStarConnectionARN, owner, repository, branch, gitRepository);
+        return new BuildConfiguration(codeStarConnectionARN, owner, repository, branch, gitRepository);
     }
     
     static CertificateValidationConfiguration certificate(String domain) {
