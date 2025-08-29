@@ -11,8 +11,8 @@ public interface Configuration {
             return new DomainEntriesConfiguration(this.appName, this.domainName, certificate);
         }
 
-        public String appNameWithDomain(){
-            return "%s-%s".formatted(this.appName,domainName);
+        public String appNameWithDomain(String stackName){
+            return "%s-%s-%s".formatted(this.appName,domainName,stackName);
         }
     }
     
