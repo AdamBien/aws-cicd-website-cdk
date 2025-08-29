@@ -10,6 +10,10 @@ public interface Configuration {
         public EntriesConfiguration withCertificate(Certificate certificate) {
             return new EntriesConfiguration(this.appName, this.domainName, certificate);
         }
+
+        public String appNameWithDomain(){
+            return "%s-%s".formatted(this.appName,domainName);
+        }
     }
     
     public record BuildConfiguration(String codeStarConnectionARN, String owner, 
