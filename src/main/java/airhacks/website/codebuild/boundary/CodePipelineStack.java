@@ -17,6 +17,7 @@ import software.amazon.awscdk.services.codebuild.LinuxBuildImage;
 import software.amazon.awscdk.services.codepipeline.Artifact;
 import software.amazon.awscdk.services.codepipeline.IAction;
 import software.amazon.awscdk.services.codepipeline.Pipeline;
+import software.amazon.awscdk.services.codepipeline.PipelineType;
 import software.amazon.awscdk.services.codepipeline.StageOptions;
 import software.amazon.awscdk.services.codepipeline.actions.CodeBuildAction;
 import software.amazon.awscdk.services.codepipeline.actions.CodeBuildActionType;
@@ -42,6 +43,7 @@ public class CodePipelineStack extends Stack{
         var buildProject = PublishingStage.create(this, pipelineName, artifactBucket,websiteBucket, logGroup,buildSpec);
         var pipeline = Pipeline.Builder.create(this, pipelineName + "Pipeline")
                 .crossAccountKeys(false)
+                .pipelineType(PipelineType.V2)
                 .artifactBucket(artifactBucket)
                 .pipelineName(pipelineName)
                 .build();
