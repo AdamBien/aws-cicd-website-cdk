@@ -1,14 +1,14 @@
 # AWS CDK Static Website Infrastructure
 
-AWS CDK application for deploying static websites with CloudFront, S3, and CI/CD pipeline.
+Multi-region AWS CDK application deploying production-ready static websites with CloudFront CDN and automated CI/CD.
 
 ## Features
 
-- CloudFront distribution with S3 origin
-- ACM certificate with DNS validation  
-- CodeBuild CI/CD pipeline with GitHub integration
-- Support for external DNS providers (Hover, GoDaddy, etc.)
-- Domain-specific configuration files
+- CloudFront distribution with optimized S3 origin and OAI
+- ACM certificates in us-east-1 for CloudFront compatibility
+- CodePipeline/CodeBuild CI/CD with GitHub CodeStar integration
+- Multi-domain support with domain-specific configurations
+- External DNS provider support (Hover, GoDaddy)
 
 ## Prerequisites
 
