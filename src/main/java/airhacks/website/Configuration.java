@@ -11,9 +11,14 @@ public interface Configuration {
             return new DomainEntriesConfiguration(this.appName, this.domainName, certificate);
         }
 
-        public String appNameWithDomain(String stackName) {
+        public String appNameWithDomain(String suffix) {
+            var appNameWithDomain = appNameWithDomain();
+            return "%s-%s".formatted(appNameWithDomain,suffix);
+        }
+
+        public String appNameWithDomain() {
             var normalizedDomainName = domainName.replace(".", "-").trim();
-            return "%s-%s-%s".formatted(this.appName, normalizedDomainName, stackName);
+            return "%s-%s".formatted(this.appName, normalizedDomainName);
         }
     }
 

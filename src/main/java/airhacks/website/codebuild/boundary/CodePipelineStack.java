@@ -34,16 +34,16 @@ public class CodePipelineStack extends Stack{
 
     public CodePipelineStack(Construct scope, DomainEntriesConfiguration domainConfiguration,IBucket websiteBucket,BuildConfiguration buildConfiguration) {
                 super(scope, domainConfiguration.appNameWithDomain(stackName));
-        var appName = domainConfiguration.appName();
-        var logGroup = createLogGroup(appName);
+        var pipelineName = domainConfiguration.appNameWithDomain();
+        var logGroup = createLogGroup(pipelineName);
         var artifactBucket = Buckets.createPrivateBucket(this);
         var domainName = websiteBucket.getBucketName();
         var buildSpec = WebsiteBuildConfiguration.createBuildSpec(domainName);                
-        var buildProject = PublishingStage.create(this, appName, artifactBucket,websiteBucket, logGroup,buildSpec);
-        var pipeline = Pipeline.Builder.create(this, appName + "Pipeline")
+        var buildProject = PublishingStage.create(this, pipelineName, artifactBucket,websiteBucket, logGroup,buildSpec);
+        var pipeline = Pipeline.Builder.create(this, pipelineName + "Pipeline")
                 .crossAccountKeys(false)
                 .artifactBucket(artifactBucket)
-                .pipelineName(appName)
+                .pipelineName(pipelineName)
                 .build();
         pipeline.addStage(createStage("github-checkout",
                 List.of(createGithubConnection(buildConfiguration.codeStarConnectionARN(),
