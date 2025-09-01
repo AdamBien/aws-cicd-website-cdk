@@ -34,7 +34,7 @@ public interface Configuration {
 
     static DomainEntriesConfiguration domainEntries(String domain, String appName) {
         ZCfg.load(domain);
-        var domainName = ZCfg.string("domain.name", "");
+        var domainName = ZCfg.string("domain.name");
         return new DomainEntriesConfiguration(appName, domainName, null);
     }
 
@@ -42,8 +42,8 @@ public interface Configuration {
         ZCfg.load(domainName);
         var codeStarConnectionARN = ZCfg.string("codestar.connection.arn",
                 "arn:aws:codestar-connections:");
-        var owner = ZCfg.string( "git.owner", "");
-        var repository = ZCfg.string( "git.repository", "");
+        var owner = ZCfg.string( "git.owner");
+        var repository = ZCfg.string( "git.repository");
         var branch = ZCfg.string( "git.branch", "main");
         var gitRepository = new GitRepository(owner, repository, branch);
         return new BuildConfiguration(codeStarConnectionARN, owner, repository, branch, gitRepository);
