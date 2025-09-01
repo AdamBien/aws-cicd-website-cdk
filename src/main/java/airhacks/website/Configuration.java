@@ -1,7 +1,7 @@
 package airhacks.website;
 
 import airhacks.website.codebuild.control.GitRepository;
-import airhacks.website.configuration.control.ConfigurationLoader;
+import airhacks.website.configuration.control.ZCfg;
 import software.amazon.awscdk.services.certificatemanager.Certificate;
 
 public interface Configuration {
@@ -33,28 +33,28 @@ public interface Configuration {
     }
 
     static DomainEntriesConfiguration domainEntries(String domain, String appName) {
-        var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
-        var domainName = ConfigurationLoader.getProperty(properties, "domain.name", "");
+        ZCfg.load(domain);
+        var domainName = ZCfg.string("domain.name", "");
         return new DomainEntriesConfiguration(appName, domainName, null);
     }
 
     static BuildConfiguration build(String domainName) {
-        var properties = ConfigurationLoader.loadConfigurationForDomain(domainName);
-        var codeStarConnectionARN = ConfigurationLoader.getProperty(properties, "codestar.connection.arn",
+        ZCfg.load(domainName);
+        var codeStarConnectionARN = ZCfg.string("codestar.connection.arn",
                 "arn:aws:codestar-connections:");
-        var owner = ConfigurationLoader.getProperty(properties, "git.owner", "");
-        var repository = ConfigurationLoader.getProperty(properties, "git.repository", "");
-        var branch = ConfigurationLoader.getProperty(properties, "git.branch", "main");
+        var owner = ZCfg.string( "git.owner", "");
+        var repository = ZCfg.string( "git.repository", "");
+        var branch = ZCfg.string( "git.branch", "main");
         var gitRepository = new GitRepository(owner, repository, branch);
         return new BuildConfiguration(codeStarConnectionARN, owner, repository, branch, gitRepository);
     }
 
     static CertificateValidationConfiguration certificate(String domain) {
-        var properties = ConfigurationLoader.loadConfigurationForDomain(domain);
-        var recordName = ConfigurationLoader.getProperty(properties, "cert.validation.record.name", null);
-        var domainName = ConfigurationLoader.getProperty(properties, "cert.validation.domain.name", null);
+        ZCfg.load(domain);
+        var recordName = ZCfg.string( "cert.validation.record.name", null);
+        var domainName = ZCfg.string( "cert.validation.domain.name", null);
         var externalDnsProvider = Boolean
-                .parseBoolean(ConfigurationLoader.getProperty(properties, "external.dns.provider", "false"));
+                .parseBoolean(ZCfg.string( "external.dns.provider", "false"));
         return new CertificateValidationConfiguration(recordName, domainName, externalDnsProvider);
     }
 }
