@@ -37,6 +37,19 @@ cdk bootstrap aws://ACCOUNT-NUMBER/eu-central-1
 aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1
 ```
 
+## Stack Naming Convention
+
+CloudFormation stacks follow the pattern: `{appName}-{normalizedDomain}-{stackType}`
+
+- `appName`: cicd-website
+- `normalizedDomain`: Domain name with dots replaced by hyphens (e.g., example-com)
+- `stackType`: certificate, cloudfront, or codepipeline
+
+Example stack names for domain `example.com`:
+- `cicd-website-example-com-certificate` (us-east-1)
+- `cicd-website-example-com-cloudfront` (target region)
+- `cicd-website-example-com-codepipeline` (target region)
+
 ## Configuration
 
 Create a configuration file in one of these locations:
