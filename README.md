@@ -52,13 +52,14 @@ Example stack names for domain `example.com`:
 
 ## Configuration
 
-Create a configuration file in one of these locations:
-- `~/.aws-website-cdk/configuration.properties` (user directory)
-- `./configuration.properties` (project directory)
+Configuration files are loaded in this order (later sources override earlier ones):
+1. `~/.aws-cicd-website-cdk/{domain}.properties` (global, domain-specific)
+2. `./app.properties` (local, overwrites global)
+3. System properties (highest priority)
 
-For domain-specific configurations:
-- `~/.aws-website-cdk/configuration-example.com.properties`
-- `./configuration-example.com.properties`
+Example paths for domain `example.com`:
+- `~/.aws-cicd-website-cdk/example.com.properties`
+- `./app.properties`
 
 ### Configuration Properties
 
