@@ -103,17 +103,15 @@ DOMAIN=example.com cdk deploy
 
 ## External DNS Provider Setup
 
-When using providers like Hover:
+When using providers like Hover, the CDK automatically creates:
+- Route53 hosted zone for your domain
+- A and AAAA alias records pointing to CloudFront
 
-1. **Certificate Validation**: Add the ACM validation CNAME record
-   - The certificate and validation CNAME are created in us-east-1 region
-   - Find records in AWS Certificate Manager console (us-east-1)
-   - Add to your DNS provider within 72 hours
-   - Keep the record for automatic renewal
-
-2. **CloudFront Distribution**: After deployment completes
-   - Add A/AAAA records or CNAME pointing to CloudFront distribution
-   - Configure www subdomain if needed
+**Manual step required**: Add the ACM certificate validation CNAME record
+- The certificate validation CNAME is created in us-east-1 region
+- Find the validation record in AWS Certificate Manager console (us-east-1)
+- Add this CNAME record to your external DNS provider within 72 hours
+- Keep the record permanently for automatic certificate renewal
 
 ## Project Structure
 
