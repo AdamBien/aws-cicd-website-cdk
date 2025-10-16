@@ -107,11 +107,18 @@ When using providers like Hover, the CDK automatically creates:
 - Route53 hosted zone for your domain
 - A and AAAA alias records pointing to CloudFront
 
-**Manual step required**: Add the ACM certificate validation CNAME record
-- The certificate validation CNAME is created in us-east-1 region
-- Find the validation record in AWS Certificate Manager console (us-east-1)
-- Add this CNAME record to your external DNS provider within 72 hours
-- Keep the record permanently for automatic certificate renewal
+**Manual steps required**:
+
+1. **Update nameservers**: Point your domain to AWS Route53 nameservers
+   - Find the nameservers in Route53 console for your hosted zone (4 NS records)
+   - Update nameserver settings in your external DNS provider (Hover, GoDaddy, etc.)
+   - DNS propagation may take up to 48 hours
+
+2. **Certificate validation**: Add the ACM validation CNAME record
+   - The certificate validation CNAME is created in us-east-1 region
+   - Find the validation record in AWS Certificate Manager console (us-east-1)
+   - Add this CNAME record to your external DNS provider within 72 hours
+   - Keep the record permanently for automatic certificate renewal
 
 ## Project Structure
 
