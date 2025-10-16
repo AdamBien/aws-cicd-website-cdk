@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import airhacks.website.log.control.Log;
+
 /**
  * Configuration loader that reads properties in order:
  * 1. ~/.[appName]/app.properties (global)
@@ -23,19 +25,21 @@ import java.util.Properties;
  */
 public class ZCfg {
     
-    static final String PROPERTIES_FILE = "app.properties";
+    static final String PROPERTIES_SUFFIX = ".properties";
+    static final String PROPERTIES_FILE = "app"+PROPERTIES_SUFFIX;
     static Properties CACHE;
     
-    public static void load(String appName) {
-        CACHE = loadProperties(appName);
+    public static void load(String appName,String domainName) {
+        CACHE = loadProperties(appName,domainName);
+        Log.info("properties loaeded: " + CACHE);
     }
     
-    static Properties loadProperties(String appName) {
+    static Properties loadProperties(String appName,String domainName) {
         var properties = new Properties();
         
         // Load global properties from ~/.[appName]/app.properties
         var userHome = System.getProperty("user.home");
-        var globalConfig = Path.of(userHome, "." + appName, PROPERTIES_FILE);
+        var globalConfig = Path.of(userHome, "." + appName, domainName+PROPERTIES_SUFFIX);
         if (Files.exists(globalConfig)) {
             loadFromFile(globalConfig, properties);
         }

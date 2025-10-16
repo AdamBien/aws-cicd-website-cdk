@@ -32,14 +32,12 @@ public interface Configuration {
             boolean externalDnsProvider) {
     }
 
-    static DomainEntriesConfiguration domainEntries(String domain, String appName) {
-        ZCfg.load(domain);
+    static DomainEntriesConfiguration domainEntries(String appName) {
         var domainName = ZCfg.string("domain.name");
         return new DomainEntriesConfiguration(appName, domainName, null);
     }
 
-    static BuildConfiguration build(String domainName) {
-        ZCfg.load(domainName);
+    static BuildConfiguration build() {
         var codeStarConnectionARN = ZCfg.string("codestar.connection.arn",
                 "arn:aws:codestar-connections:");
         var owner = ZCfg.string( "git.owner");
@@ -49,8 +47,7 @@ public interface Configuration {
         return new BuildConfiguration(codeStarConnectionARN, owner, repository, branch, gitRepository);
     }
 
-    static CertificateValidationConfiguration certificate(String domain) {
-        ZCfg.load(domain);
+    static CertificateValidationConfiguration certificate() {
         var recordName = ZCfg.string( "cert.validation.record.name", null);
         var domainName = ZCfg.string( "cert.validation.domain.name", null);
         var externalDnsProvider = Boolean

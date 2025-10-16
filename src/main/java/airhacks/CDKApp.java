@@ -4,21 +4,25 @@ import airhacks.website.Configuration;
 import airhacks.website.certificate.boundary.DomainCertificateStack;
 import airhacks.website.cloudfront.boundary.CloudFrontStack;
 import airhacks.website.codebuild.boundary.CodePipelineStack;
+import airhacks.website.configuration.control.ZCfg;
+import airhacks.website.log.control.Log;
 import software.amazon.awscdk.App;
 import software.amazon.awscdk.Tags;
 
 public interface CDKApp {
     String shortName = "cicd-website";
-    String projectName = "aws-%s-cdk".formatted(shortName);
+    String appName = "aws-%s-cdk".formatted(shortName);
 
     static void main(String... args) {
 
         var app = new App();
         
         var domain = fetchDomain(app);
-        var certificateConfiguration = Configuration.certificate(domain);
-        var domainEntriesConfiguration = Configuration.domainEntries(domain, shortName);
-        var buildConfiguration = Configuration.build(domain);
+        Log.info("domain received: " + domain);
+        ZCfg.load(appName, domain);
+        var certificateConfiguration = Configuration.certificate();
+        var domainEntriesConfiguration = Configuration.domainEntries(appName);
+        var buildConfiguration = Configuration.build();
         Tags.of(app).add("environment", "production");
         Tags.of(app).add("domain", domainEntriesConfiguration.domainName());
         Tags.of(app).add("application", shortName);
