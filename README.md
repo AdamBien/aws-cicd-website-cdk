@@ -92,9 +92,18 @@ cdk deploy --context domain=example.com
 ### With external DNS provider:
 1. Set `external.dns.provider=true` in configuration
 2. Deploy: `cdk deploy --context domain=example.com`
-3. Add CNAME validation record from us-east-1 ACM to your DNS provider
+3. Add CNAME validation record from us-east-1 ACM to your DNS provider. Otherwise the CDK deployment will block.
 4. Wait for certificate validation to complete
 5. Add CloudFront distribution CNAME/A records to your DNS provider
+
+
+### With Route 53 DNS and external domain registrar:
+1. Set `external.dns.provider=true` in configuration
+2. Deploy: `cdk deploy --context domain=example.com`
+3. Add CNAME validation record from us-east-1 ACM to your DNS provider. Otherwise the CDK deployment will block.
+4. Wait for certificate validation to complete
+5. CDK will create a public hosted zone in us-east-1
+6. Pick the DNS server from the created hosted zone and configure your DNS registrar to use them.
 
 ### Using environment variable:
 ```bash
