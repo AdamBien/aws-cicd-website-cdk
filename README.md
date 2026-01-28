@@ -14,7 +14,7 @@ Multi-region AWS CDK application deploying production-ready static websites with
 
 - AWS CLI configured with credentials
 - AWS CDK CLI installed (`npm install -g aws-cdk`)
-- Java 21+
+- Java 25+
 - Maven
 - AWS account bootstrapped for CDK (see Bootstrap section)
 
