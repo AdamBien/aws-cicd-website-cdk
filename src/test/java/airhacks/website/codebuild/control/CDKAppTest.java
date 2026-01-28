@@ -22,8 +22,8 @@ public class CDKAppTest {
     public void stacks() throws IOException {
         App app = new App();
         var domain = "airhacks.live";
-        var entries = Configuration.domainEntries(domain, "test-app");
-        var certificateConfiguration = Configuration.certificate(domain);
+        var entries = Configuration.domainEntries(domain);
+        var certificateConfiguration = Configuration.certificate();
         var domainStack = new DomainCertificateStack(app, entries);
         var actual = JSON.valueToTree(app.synth().getStackArtifact(domainStack.getArtifactId()).getTemplate());
         assertThat(actual.get("Resources")).isNotEmpty();
