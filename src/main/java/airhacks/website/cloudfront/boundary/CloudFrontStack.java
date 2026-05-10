@@ -5,7 +5,6 @@ import java.util.List;
 import airhacks.website.Stacks;
 import airhacks.website.Configuration.CertificateValidationConfiguration;
 import airhacks.website.Configuration.DomainEntriesConfiguration;
-import airhacks.website.iam.IAMConstructs;
 import airhacks.website.route53.control.Route53;
 import airhacks.website.s3.control.Buckets;
 import software.amazon.awscdk.CfnOutput;
@@ -15,9 +14,9 @@ import software.amazon.awscdk.services.cloudfront.AllowedMethods;
 import software.amazon.awscdk.services.cloudfront.BehaviorOptions;
 import software.amazon.awscdk.services.cloudfront.CachePolicy;
 import software.amazon.awscdk.services.cloudfront.Distribution;
-import software.amazon.awscdk.services.cloudfront.OriginAccessIdentity;
 import software.amazon.awscdk.services.cloudfront.ViewerProtocolPolicy;
-import software.amazon.awscdk.services.cloudfront.origins.S3Origin;
+import software.amazon.awscdk.services.cloudfront.IOrigin;
+import software.amazon.awscdk.services.cloudfront.origins.S3BucketOrigin;
 import software.amazon.awscdk.services.s3.Bucket;
 import software.constructs.Construct;
 
@@ -32,13 +31,7 @@ public class CloudFrontStack extends Stack {
                 super(scope, configuration.appNameWithDomain(stackName),Stacks.EU_CENTRAL_1);
 
                 this.websiteBucket = Buckets.createWebsiteBucket(this, configuration.domainName());
-                var oai = new OriginAccessIdentity(this, "CloudFrontOriginAccessIdentity");
-                var readBucketPolicy = IAMConstructs.createReadPolicy(websiteBucket, oai);
-                websiteBucket.addToResourcePolicy(readBucketPolicy);
-                var s3Origin = S3Origin.Builder
-                                .create(websiteBucket)
-                                .originAccessIdentity(oai)
-                                .build();
+                var s3Origin = createS3Origin(websiteBucket);
                 this.distribution = this.createCloudFrontDistribution(configuration, s3Origin);
                 Route53.setupAliasRecord(this, this.distribution, configuration.domainName(),certificateConfiguration);
                 Tags.of(websiteBucket).add("component", "bucket for static assets");
@@ -46,8 +39,19 @@ public class CloudFrontStack extends Stack {
                 CfnOutput.Builder.create(this, "CloudFrontDistributionDomainNameOutput").value(this.distribution.getDistributionDomainName()).build();
         }
 
+        /**
+         * Origin Access Control (OAC) is the AWS-recommended successor to Origin Access Identity (OAI)
+         * for restricting S3 origin access to CloudFront. CDK creates the OAC and the bucket policy automatically.
+         *
+         * @see <a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html">CloudFront: Restricting access to an S3 origin</a>
+         * @see <a href="https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront_origins.S3BucketOrigin.html">CDK API: S3BucketOrigin.withOriginAccessControl</a>
+         */
+        static IOrigin createS3Origin(Bucket websiteBucket) {
+                return S3BucketOrigin.withOriginAccessControl(websiteBucket);
+        }
+
         Distribution createCloudFrontDistribution(DomainEntriesConfiguration entries,
-                        S3Origin s3Origin) {
+                        IOrigin s3Origin) {
                 var domainName = entries.domainName();
                 var certificate = entries.certificate();
                 return Distribution.Builder
