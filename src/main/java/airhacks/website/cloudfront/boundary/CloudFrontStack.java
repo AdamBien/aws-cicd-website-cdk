@@ -58,7 +58,7 @@ public class CloudFrontStack extends Stack {
                                 .defaultBehavior(BehaviorOptions.builder()
                                                 .allowedMethods(AllowedMethods.ALLOW_ALL)
                                                 .viewerProtocolPolicy(ViewerProtocolPolicy.REDIRECT_TO_HTTPS)
-                                                .cachePolicy(CachePolicy.CACHING_DISABLED)
+                                                .cachePolicy(CachePolicy.CACHING_OPTIMIZED)
                                                 .origin(s3Origin)
                                                 .build())
                                 .build();
