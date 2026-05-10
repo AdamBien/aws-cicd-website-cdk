@@ -100,7 +100,7 @@ cdk deploy --context domain=example.com
 Use this when the apex/www records remain at your provider and only the ACM validation CNAME is added there.
 1. Set `external.dns.provider=true`
 2. `cdk deploy --context domain=example.com` — deployment blocks waiting for cert validation
-3. Copy the validation CNAME from ACM (us-east-1 console) into your DNS provider
+3. Copy the validation CNAME from ACM (us-east-1 console) into your DNS provider — see [Provider-specific notes](#provider-specific-notes) below for Hover
 4. Wait for ACM to validate
 5. Add A/AAAA (or CNAME) records at your provider pointing to the CloudFront distribution domain (printed as `CloudFrontDistributionDomainNameOutput`)
 
@@ -108,10 +108,17 @@ Use this when the apex/www records remain at your provider and only the ACM vali
 Use this when you keep the registrar (Hover, GoDaddy, ...) but want Route53 to be authoritative for DNS.
 1. Set `external.dns.provider=true`
 2. `cdk deploy --context domain=example.com` — deployment blocks waiting for cert validation
-3. Copy the validation CNAME from ACM (us-east-1 console) into your provider's DNS *or* into the new Route53 hosted zone (the zone is created by `CloudFrontStack` in eu-central-1; Route53 itself is global)
+3. Copy the validation CNAME from ACM (us-east-1 console) into your provider's DNS *or* into the new Route53 hosted zone (the zone is created by `CloudFrontStack` in eu-central-1; Route53 itself is global) — see [Provider-specific notes](#provider-specific-notes) below for Hover
 4. Wait for ACM to validate
 5. Read the four NS records from the new Route53 hosted zone and configure them at your registrar — DNS propagation up to 48h
 6. Keep the validation CNAME permanently for automatic certificate renewal
+
+## Provider-specific notes
+
+### Hover
+When pasting the ACM validation CNAME into Hover:
+- **Hostname / "CNAME name"**: use the left-most part relative to your domain. Hover stores the hostname only, not the FQDN — e.g. ACM emits `_abc123.example.com.`, enter `_abc123`.
+- **Target / Value**: drop the trailing dot. Hover rejects the FQDN form — e.g. `_xyz.acm-validations.aws.` → `_xyz.acm-validations.aws`.
 
 ## Project Structure
 
