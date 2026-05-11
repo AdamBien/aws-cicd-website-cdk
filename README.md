@@ -6,6 +6,7 @@ Two-region AWS CDK application deploying production-ready static websites with C
 
 - CloudFront distribution with S3 origin secured via Origin Access Control (OAC)
 - Optimized cache policy (`CACHING_OPTIMIZED`) for static assets
+- Automatic CloudFront cache invalidation on every pipeline run
 - ACM certificates in us-east-1 for CloudFront compatibility
 - CodePipeline + CodeBuild CI/CD with GitHub CodeStar Connections
 - Domain-driven stack naming (one stack triple per domain)
@@ -112,6 +113,18 @@ Use this when you keep the registrar (Hover, GoDaddy, ...) but want Route53 to b
 4. Wait for ACM to validate
 5. Read the four NS records from the new Route53 hosted zone and configure them at your registrar — DNS propagation up to 48h
 6. Keep the validation CNAME permanently for automatic certificate renewal
+
+## Cache Invalidation
+
+The `CACHING_OPTIMIZED` policy caches `index.html` and other assets at CloudFront edges for up to 1 day by default, so freshly published files would not be visible until the TTL expires. To keep deployments instantly visible, the CodeBuild publishing stage runs an invalidation as the last build command:
+
+```
+aws cloudfront create-invalidation --distribution-id <ID> --paths "/*"
+```
+
+The distribution ID is wired in from `CloudFrontStack` via `WebsiteBuildConfiguration.createBuildSpec(domainName, distributionId)`, and `PublishingStage` grants the CodeBuild role least-privilege `cloudfront:CreateInvalidation` permission scoped to this distribution (`distribution.grantCreateInvalidation(serviceRole)`).
+
+Cost note: AWS includes 1,000 invalidation paths per month at no charge. `"/*"` counts as a single path, so even daily deploys stay well inside the free tier.
 
 ## Provider-specific notes
 
