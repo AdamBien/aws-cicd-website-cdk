@@ -1,5 +1,6 @@
 package airhacks.website.codebuild.control;
 
+import software.amazon.awscdk.services.cloudfront.IDistribution;
 import software.amazon.awscdk.services.codebuild.BuildEnvironment;
 import software.amazon.awscdk.services.codebuild.BuildSpec;
 import software.amazon.awscdk.services.codebuild.Cache;
@@ -16,7 +17,8 @@ public interface PublishingStage{
 
 
         public static PipelineProject create(Construct scope, String projectName,
-                        IBucket sourceBucket, IBucket websiteBucket,ILogGroup logGroup, BuildSpec buildSpec) {
+                        IBucket sourceBucket, IBucket websiteBucket, IDistribution distribution,
+                        ILogGroup logGroup, BuildSpec buildSpec) {
                 var pipelineProject = PipelineProject.Builder
                                 .create(scope, "PipelineProject")
                                 .cache(Cache.none())
@@ -32,6 +34,7 @@ public interface PublishingStage{
                 var serviceRole = pipelineProject.getRole();
                 sourceBucket.grantReadWrite(serviceRole);
                 websiteBucket.grantReadWrite(serviceRole);
+                distribution.grantCreateInvalidation(serviceRole);
                 logGroup.grantWrite(serviceRole);
                 return pipelineProject;
         }

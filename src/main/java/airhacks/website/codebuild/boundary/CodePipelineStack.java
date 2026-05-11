@@ -11,6 +11,7 @@ import airhacks.website.codebuild.entity.WebsiteBuildConfiguration;
 import airhacks.website.s3.control.Buckets;
 import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.Stack;
+import software.amazon.awscdk.services.cloudfront.IDistribution;
 import software.amazon.awscdk.services.codebuild.IBuildImage;
 import software.amazon.awscdk.services.codebuild.IProject;
 import software.amazon.awscdk.services.codebuild.LinuxBuildImage;
@@ -33,14 +34,14 @@ public class CodePipelineStack extends Stack{
     static IBuildImage BUILD_IMAGE = LinuxBuildImage.STANDARD_7_0;
     static Artifact SOURCE_OUTPUT = Artifact.artifact("source");
 
-    public CodePipelineStack(Construct scope, DomainEntriesConfiguration domainConfiguration,IBucket websiteBucket,BuildConfiguration buildConfiguration) {
+    public CodePipelineStack(Construct scope, DomainEntriesConfiguration domainConfiguration,IBucket websiteBucket,IDistribution distribution,BuildConfiguration buildConfiguration) {
                 super(scope, domainConfiguration.appNameWithDomain(stackName));
         var pipelineName = domainConfiguration.appNameWithDomain();
         var logGroup = createLogGroup(pipelineName);
         var artifactBucket = Buckets.createPrivateBucket(this);
         var domainName = websiteBucket.getBucketName();
-        var buildSpec = WebsiteBuildConfiguration.createBuildSpec(domainName);                
-        var buildProject = PublishingStage.create(this, pipelineName, artifactBucket,websiteBucket, logGroup,buildSpec);
+        var buildSpec = WebsiteBuildConfiguration.createBuildSpec(domainName, distribution.getDistributionId());
+        var buildProject = PublishingStage.create(this, pipelineName, artifactBucket,websiteBucket, distribution, logGroup,buildSpec);
         var pipeline = Pipeline.Builder.create(this, pipelineName + "Pipeline")
                 .crossAccountKeys(false)
                 .pipelineType(PipelineType.V2)

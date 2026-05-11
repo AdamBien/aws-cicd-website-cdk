@@ -32,7 +32,8 @@ public interface CDKApp {
         var extendedEntries = domainEntriesConfiguration.withCertificate(certificate);
         var cloudfront = new CloudFrontStack(app, extendedEntries,certificateConfiguration);
         var websiteBucket = cloudfront.getWebsiteBucket();
-        new CodePipelineStack(app, domainEntriesConfiguration, websiteBucket,buildConfiguration);
+        var distribution = cloudfront.getDistribution();
+        new CodePipelineStack(app, domainEntriesConfiguration, websiteBucket,distribution,buildConfiguration);
         app.synth();
     }
     

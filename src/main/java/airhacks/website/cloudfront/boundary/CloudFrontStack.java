@@ -50,6 +50,17 @@ public class CloudFrontStack extends Stack {
                 return S3BucketOrigin.withOriginAccessControl(websiteBucket);
         }
 
+        /**
+         * Cache policy impact on {@code index.html}:
+         * <ul>
+         *   <li>{@link CachePolicy#CACHING_OPTIMIZED} (used here) — {@code index.html} is cached at the edge for up to 1 day; updates require an invalidation.</li>
+         *   <li>{@link CachePolicy#CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS} — same, but skips gzip/brotli negotiation.</li>
+         *   <li>{@link CachePolicy#CACHING_DISABLED} — every request for {@code index.html} hits S3.</li>
+         *   <li>{@link CachePolicy#USE_ORIGIN_CACHE_CONTROL_HEADERS} — TTL of {@code index.html} follows the {@code Cache-Control} header set on the S3 object.</li>
+         * </ul>
+         *
+         * @see <a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html">CloudFront: Using managed cache policies</a>
+         */
         Distribution createCloudFrontDistribution(DomainEntriesConfiguration entries,
                         IOrigin s3Origin) {
                 var domainName = entries.domainName();
