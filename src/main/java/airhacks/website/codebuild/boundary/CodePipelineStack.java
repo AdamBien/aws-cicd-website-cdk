@@ -5,6 +5,7 @@ import java.util.List;
 
 import airhacks.website.Configuration.BuildConfiguration;
 import airhacks.website.Configuration.DomainEntriesConfiguration;
+import airhacks.website.Stacks;
 import airhacks.website.codebuild.control.GitRepository;
 import airhacks.website.codebuild.control.PublishingStage;
 import airhacks.website.codebuild.entity.WebsiteBuildConfiguration;
@@ -35,7 +36,7 @@ public class CodePipelineStack extends Stack{
     static Artifact SOURCE_OUTPUT = Artifact.artifact("source");
 
     public CodePipelineStack(Construct scope, DomainEntriesConfiguration domainConfiguration,IBucket websiteBucket,IDistribution distribution,BuildConfiguration buildConfiguration) {
-                super(scope, domainConfiguration.appNameWithDomain(stackName));
+                super(scope, domainConfiguration.appNameWithDomain(stackName), Stacks.EU_CENTRAL_1);
         var pipelineName = domainConfiguration.appNameWithDomain();
         var logGroup = createLogGroup(pipelineName);
         var artifactBucket = Buckets.createPrivateBucket(this);
