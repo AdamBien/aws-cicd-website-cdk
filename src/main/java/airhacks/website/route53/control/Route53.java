@@ -1,6 +1,5 @@
 package airhacks.website.route53.control;
 
-import airhacks.website.Configuration;
 import airhacks.website.Configuration.CertificateValidationConfiguration;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.services.cloudfront.Distribution;
@@ -31,7 +30,9 @@ public interface Route53 {
                                 .target(RecordTarget.fromAlias(cloudFrontTarget))
                                 .build();
                 //The external DNS provider must maintain validation records.
-                if (!certificateConfiguration.externalDnsProvider()) {
+                //On the first deploy the ACM-emitted values are still unknown, so skip the
+                //record until cert.validation.record.name / cert.validation.domain.name are set.
+                if (!certificateConfiguration.externalDnsProvider() && hasValidationRecord(certificateConfiguration)) {
                         CnameRecord.Builder.create(scope, "CertValidation")
                                         .zone(hostedZone)
                                         .comment("requested from ACM for validation")
@@ -40,5 +41,13 @@ public interface Route53 {
                                         .ttl(Duration.minutes(5))
                                         .build();
                 }
+        }
+
+        static boolean hasValidationRecord(CertificateValidationConfiguration configuration) {
+                return isPresent(configuration.recordName()) && isPresent(configuration.domainName());
+        }
+
+        static boolean isPresent(String value) {
+                return value != null && !value.isBlank();
         }
 }
