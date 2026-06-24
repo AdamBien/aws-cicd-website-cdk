@@ -42,14 +42,14 @@ aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1
 
 CloudFormation stacks follow the pattern: `{appName}-{normalizedDomain}-{stackType}`
 
-- `appName`: cicd-website
+- `appName`: `aws-cicd-website-cdk` (derived in `CDKApp` as `aws-{shortName}-cdk`, where `shortName` is `cicd-website`)
 - `normalizedDomain`: Domain name with dots replaced by hyphens (e.g., example-com)
 - `stackType`: certificate, cloudfront, or codepipeline
 
 Example stack names for domain `example.com`:
-- `cicd-website-example-com-certificate` (us-east-1)
-- `cicd-website-example-com-cloudfront` (eu-central-1)
-- `cicd-website-example-com-codepipeline` (eu-central-1)
+- `aws-cicd-website-cdk-example-com-certificate` (us-east-1)
+- `aws-cicd-website-cdk-example-com-cloudfront` (eu-central-1)
+- `aws-cicd-website-cdk-example-com-codepipeline` (eu-central-1)
 
 ## Configuration
 
@@ -80,6 +80,8 @@ hosted.zone.id=Z0123456789ABCDEFGHIJ
 external.dns.provider=false
 
 # GitHub integration
+# Reference an existing connection ARN (the stack does not create it). Create and
+# authorize the connection once in the console first (see "GitHub Connection" below).
 codestar.connection.arn=arn:aws:codestar-connections:region:account:connection/xxx
 git.owner=your-github-username
 git.repository=your-repo-name
@@ -100,7 +102,7 @@ The domain is always passed via CDK context. Because the app synthesizes three s
 ```bash
 cdk deploy --all --context domain=example.com
 ```
-`--all` honors the inter-stack dependencies described in Flow A below. To target a single stack, name it (wildcards work), e.g. `cdk deploy 'cicd-website-example-com-*' --context domain=example.com`.
+`--all` honors the inter-stack dependencies described in Flow A below. To target a single stack, name it (wildcards work), e.g. `cdk deploy 'aws-cicd-website-cdk-example-com-*' --context domain=example.com`.
 
 ### Flow A — Route53 manages DNS (registrar at AWS or NS delegated):
 1. `external.dns.provider=false` (default); set `hosted.zone.id` to the domain's existing Route53 zone, leave `cert.validation.*` blank
@@ -108,7 +110,7 @@ cdk deploy --all --context domain=example.com
 3. In the ACM console (us-east-1), open the certificate and click **"Create records in Route 53"** — ACM writes the validation CNAME into the hosted zone automatically
 4. ACM validates and the deployment **continues on its own** through the cloudfront and codepipeline stacks — no redeploy and no manual `cert.validation.*` values required
 
-**What gets provisioned.** CDK derives the dependency graph from the cross-stack references wired in `airhacks.CDKApp` — you don't manage it manually. The three stacks relate as:
+The three stacks and their dependencies (CDK orders them automatically from the references in `airhacks.CDKApp`):
 
 - `…-certificate` (`DomainCertificateStack`, us-east-1) — produces the ACM certificate; CloudFront requires a us-east-1 certificate.
 - `…-cloudfront` (`CloudFrontStack`, eu-central-1) — consumes the certificate (cross-region reference) and creates the S3 bucket, the distribution, and the CloudFront alias records. The hosted zone is resolved by the DNS model: with `external.dns.provider=false` it **references the existing zone** via `hosted.zone.id` (`HostedZone.fromHostedZoneAttributes`); with `external.dns.provider=true` it **creates a new zone** so its NS records can be delegated at the external registrar.
@@ -132,6 +134,16 @@ Use this when you keep the registrar (Hover, GoDaddy, ...) but want Route53 to b
 4. Wait for ACM to validate
 5. Read the four NS records from the new Route53 hosted zone and configure them at your registrar — DNS propagation up to 48h
 6. Keep the validation CNAME permanently for automatic certificate renewal
+
+## GitHub Connection
+
+The pipeline pulls the website repository through an AWS CodeConnections (formerly CodeStar Connections) connection. The stack does **not** create this connection — it only references an existing one by ARN (`codestar.connection.arn` → `CodeStarConnectionsSourceAction.connectionArn`). You create and authorize the connection yourself; a freshly created one is **PENDING** until you complete the GitHub handshake, and the pipeline's source stage fails while it stays pending.
+
+1. Create the connection in the console (Developer Tools → Settings → Connections) — it starts **PENDING** — and put its ARN in `codestar.connection.arn`.
+2. Open the connection and click **Update pending connection** — complete the GitHub handshake and install/authorize the AWS Connector GitHub App on the account/org that owns the website repo (`git.owner`/`git.repository`).
+3. With the connection **Available**, `cdk deploy` wires its ARN into the pipeline and the source stage can fetch the repository.
+
+The handshake is a one-time step per connection; subsequent deploys and runs reuse it.
 
 ## Cache Invalidation
 
