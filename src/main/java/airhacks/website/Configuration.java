@@ -6,9 +6,9 @@ import software.amazon.awscdk.services.certificatemanager.Certificate;
 
 public interface Configuration {
 
-    public record DomainEntriesConfiguration(String appName, String domainName, Certificate certificate) {
+    public record DomainEntriesConfiguration(String appName, String domainName, String hostedZoneId, Certificate certificate) {
         public DomainEntriesConfiguration withCertificate(Certificate certificate) {
-            return new DomainEntriesConfiguration(this.appName, this.domainName, certificate);
+            return new DomainEntriesConfiguration(this.appName, this.domainName, this.hostedZoneId, certificate);
         }
 
         public String appNameWithDomain(String suffix) {
@@ -34,7 +34,8 @@ public interface Configuration {
 
     static DomainEntriesConfiguration domainEntries(String appName) {
         var domainName = ZCfg.string("domain.name");
-        return new DomainEntriesConfiguration(appName, domainName, null);
+        var hostedZoneId = ZCfg.string("hosted.zone.id");
+        return new DomainEntriesConfiguration(appName, domainName, hostedZoneId, null);
     }
 
     static BuildConfiguration build() {

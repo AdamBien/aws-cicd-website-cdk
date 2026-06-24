@@ -68,6 +68,13 @@ Example paths for domain `example.com`:
 # Domain configuration
 domain.name=example.com
 
+# Existing Route53 public hosted zone for the domain.
+# Required only when external.dns.provider=false (domain registered in Route53):
+# the stack reuses this zone instead of creating a duplicate. Find the Z... id in
+# the Route53 console. Leave blank when external.dns.provider=true — the stack
+# creates a new zone in that case.
+hosted.zone.id=Z0123456789ABCDEFGHIJ
+
 # External DNS provider (default: false)
 # Set to true if using Hover, GoDaddy, etc.
 external.dns.provider=false
@@ -78,29 +85,41 @@ git.owner=your-github-username
 git.repository=your-repo-name
 git.branch=main
 
-# Certificate validation (for external DNS)
-# Leave blank on first deploy; ACM emits these values during certificate creation.
-# Copy them from the AWS Certificate Manager console (us-east-1) and paste back, then redeploy.
+# Certificate validation (optional)
+# Not required for Route53 (Flow A) — the ACM console "Create records in Route 53"
+# button creates the validation CNAME and the deployment waits until the cert is issued.
+# Only set these if you want Route53 to hand-build the validation CNAME instead;
+# ACM emits the values during certificate creation (us-east-1 console).
 cert.validation.record.name=_xxx.example.com
 cert.validation.domain.name=_xxx.acm-validations.aws.
 ```
 
 ## Deployment
 
-The domain is always passed via CDK context:
+The domain is always passed via CDK context. Because the app synthesizes three stacks, deploy them with `--all` (a bare `cdk deploy` errors asking you to name a stack):
 ```bash
-cdk deploy --context domain=example.com
+cdk deploy --all --context domain=example.com
 ```
+`--all` honors the inter-stack dependencies described in Flow A below. To target a single stack, name it (wildcards work), e.g. `cdk deploy 'cicd-website-example-com-*' --context domain=example.com`.
 
 ### Flow A — Route53 manages DNS (registrar at AWS or NS delegated):
-1. `external.dns.provider=false` (default)
-2. `cdk deploy --context domain=example.com`
-3. CDK creates the hosted zone, ACM validation CNAME, and CloudFront alias records automatically.
+1. `external.dns.provider=false` (default); set `hosted.zone.id` to the domain's existing Route53 zone, leave `cert.validation.*` blank
+2. `cdk deploy --all --context domain=example.com` — the certificate stack enters `PENDING_VALIDATION` and the deployment waits
+3. In the ACM console (us-east-1), open the certificate and click **"Create records in Route 53"** — ACM writes the validation CNAME into the hosted zone automatically
+4. ACM validates and the deployment **continues on its own** through the cloudfront and codepipeline stacks — no redeploy and no manual `cert.validation.*` values required
+
+**What gets provisioned.** CDK derives the dependency graph from the cross-stack references wired in `airhacks.CDKApp` — you don't manage it manually. The three stacks relate as:
+
+- `…-certificate` (`DomainCertificateStack`, us-east-1) — produces the ACM certificate; CloudFront requires a us-east-1 certificate.
+- `…-cloudfront` (`CloudFrontStack`, eu-central-1) — consumes the certificate (cross-region reference) and creates the S3 bucket, the distribution, and the CloudFront alias records. The hosted zone is resolved by the DNS model: with `external.dns.provider=false` it **references the existing zone** via `hosted.zone.id` (`HostedZone.fromHostedZoneAttributes`); with `external.dns.provider=true` it **creates a new zone** so its NS records can be delegated at the external registrar.
+- `…-codepipeline` (`CodePipelineStack`, eu-central-1) — consumes the website bucket and the distribution from the CloudFront stack.
+
+**Validation timing.** The certificate stack uses `CertificateValidation.fromDns()` and enters `PENDING_VALIDATION`. The simplest way to clear it is the ACM console **"Create records in Route 53"** button (Flow A step 3), which writes the validation CNAME into the hosted zone for you; the in-progress `cdk deploy` then validates and continues without intervention. The `cert.validation.record.name` / `cert.validation.domain.name` properties are only consumed by the optional hand-built CNAME in `Route53.setupAliasRecord` — leave them blank to let the console (or ACM auto-validation) manage the record instead.
 
 ### Flow B — DNS stays with an external provider (Hover, GoDaddy, ...):
 Use this when the apex/www records remain at your provider and only the ACM validation CNAME is added there.
 1. Set `external.dns.provider=true`
-2. `cdk deploy --context domain=example.com` — deployment blocks waiting for cert validation
+2. `cdk deploy --all --context domain=example.com` — deployment blocks waiting for cert validation
 3. Copy the validation CNAME from ACM (us-east-1 console) into your DNS provider — see [Provider-specific notes](#provider-specific-notes) below for Hover
 4. Wait for ACM to validate
 5. Add A/AAAA (or CNAME) records at your provider pointing to the CloudFront distribution domain (printed as `CloudFrontDistributionDomainNameOutput`)
@@ -108,7 +127,7 @@ Use this when the apex/www records remain at your provider and only the ACM vali
 ### Flow C — External registrar, DNS delegated to Route53:
 Use this when you keep the registrar (Hover, GoDaddy, ...) but want Route53 to be authoritative for DNS.
 1. Set `external.dns.provider=true`
-2. `cdk deploy --context domain=example.com` — deployment blocks waiting for cert validation
+2. `cdk deploy --all --context domain=example.com` — deployment blocks waiting for cert validation
 3. Copy the validation CNAME from ACM (us-east-1 console) into your provider's DNS *or* into the new Route53 hosted zone (the zone is created by `CloudFrontStack` in eu-central-1; Route53 itself is global) — see [Provider-specific notes](#provider-specific-notes) below for Hover
 4. Wait for ACM to validate
 5. Read the four NS records from the new Route53 hosted zone and configure them at your registrar — DNS propagation up to 48h
@@ -141,7 +160,7 @@ When pasting the ACM validation CNAME into Hover:
 - `airhacks.website.certificate.boundary.DomainCertificateStack` — ACM certificate (us-east-1)
 - `airhacks.website.cloudfront.boundary.CloudFrontStack` — distribution + S3 origin (OAC)
 - `airhacks.website.codebuild.boundary.CodePipelineStack` — CodePipeline + CodeBuild publishing stage
-- `airhacks.website.route53.control.Route53` — hosted zone and alias records
+- `airhacks.website.route53.control.Route53` — alias records; reuses the existing hosted zone (`external.dns.provider=false`) or creates one (`true`)
 - `airhacks.website.s3.control.Buckets` — website and artifact bucket factories
 - `airhacks.website.configuration.control.ZCfg` — properties cascade loader
 

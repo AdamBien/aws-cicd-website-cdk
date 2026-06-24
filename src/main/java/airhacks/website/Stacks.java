@@ -16,5 +16,5 @@ public interface Stacks {
             .crossRegionReferences(true)
             .env(Environment.builder()
                     .region("eu-central-1").build())
-            .build();            
+            .build();
 }

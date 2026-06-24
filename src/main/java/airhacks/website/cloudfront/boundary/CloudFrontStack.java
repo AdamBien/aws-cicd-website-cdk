@@ -33,7 +33,7 @@ public class CloudFrontStack extends Stack {
                 this.websiteBucket = Buckets.createWebsiteBucket(this, configuration.domainName());
                 var s3Origin = createS3Origin(websiteBucket);
                 this.distribution = this.createCloudFrontDistribution(configuration, s3Origin);
-                Route53.setupAliasRecord(this, this.distribution, configuration.domainName(),certificateConfiguration);
+                Route53.setupAliasRecord(this, this.distribution, configuration.domainName(),configuration.hostedZoneId(),certificateConfiguration);
                 Tags.of(websiteBucket).add("component", "bucket for static assets");
                 Tags.of(websiteBucket).add("domain", configuration.domainName());
                 CfnOutput.Builder.create(this, "CloudFrontDistributionDomainNameOutput").value(this.distribution.getDistributionDomainName()).build();
