@@ -152,6 +152,17 @@ To serve a second, unrelated domain (e.g. `example.org` alongside `example.com`)
 
 Both properties must be set together; the alternative domain must be Route53-managed with an existing public hosted zone (`external.dns.provider` applies to the primary domain only). Leaving both blank keeps the exact single-domain behavior.
 
+**Adding an alternative to an already-deployed domain.** The certificate ARN crosses regions via CDK's export writer, which rejects a changed value under a stable export name (`Some exports have changed!`). The certificate construct id is therefore derived from the domain set: a SAN change replaces the certificate under a new logical id, turning the export into a removed+added pair. The *removed* export must not be tagged in-use, so before the first deploy after adding (or changing) alternatives on a live deployment, delete the old export parameter in the CloudFront region:
+
+```bash
+aws ssm delete-parameter --region eu-central-1 \
+  --name "$(aws ssm get-parameters-by-path --region eu-central-1 \
+      --path '/cdk/exports/aws-cicd-website-cdk-<normalized-domain>-cloudfront/' \
+      --query 'Parameters[0].Name' --output text)"
+```
+
+Then deploy as usual. Expect harmless `DELETE_FAILED` retries on the old certificate during cleanup (it is still attached to the distribution until the CloudFront stack switches); delete it in the ACM console afterwards if it was orphaned.
+
 ## GitHub Connection
 
 The pipeline pulls the website repository through an AWS CodeConnections (formerly CodeStar Connections) connection. The stack does **not** create this connection — it only references an existing one by ARN (`codestar.connection.arn` → `CodeStarConnectionsSourceAction.connectionArn`). You create and authorize the connection yourself; a freshly created one is **PENDING** until you complete the GitHub handshake, and the pipeline's source stage fails while it stays pending.
