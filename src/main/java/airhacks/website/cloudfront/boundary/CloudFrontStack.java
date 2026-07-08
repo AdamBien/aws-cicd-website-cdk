@@ -1,7 +1,5 @@
 package airhacks.website.cloudfront.boundary;
 
-import java.util.List;
-
 import airhacks.website.Stacks;
 import airhacks.website.Configuration.CertificateValidationConfiguration;
 import airhacks.website.Configuration.DomainEntriesConfiguration;
@@ -34,6 +32,7 @@ public class CloudFrontStack extends Stack {
                 var s3Origin = createS3Origin(websiteBucket);
                 this.distribution = this.createCloudFrontDistribution(configuration, s3Origin);
                 Route53.setupAliasRecord(this, this.distribution, configuration.domainName(),configuration.hostedZoneId(),certificateConfiguration);
+                Route53.setupAlternativeAliasRecords(this, this.distribution, configuration.alternativeDomains());
                 Tags.of(websiteBucket).add("component", "bucket for static assets");
                 Tags.of(websiteBucket).add("domain", configuration.domainName());
                 CfnOutput.Builder.create(this, "CloudFrontDistributionDomainNameOutput").value(this.distribution.getDistributionDomainName()).build();
@@ -63,11 +62,10 @@ public class CloudFrontStack extends Stack {
          */
         Distribution createCloudFrontDistribution(DomainEntriesConfiguration entries,
                         IOrigin s3Origin) {
-                var domainName = entries.domainName();
                 var certificate = entries.certificate();
                 return Distribution.Builder
                                 .create(this, "CloudFrontDistribution")
-                                .domainNames(List.of(domainName))
+                                .domainNames(entries.allDomainNames())
                                 .certificate(certificate)
                                 .defaultRootObject("index.html")
                                 .defaultBehavior(BehaviorOptions.builder()

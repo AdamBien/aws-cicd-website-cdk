@@ -79,6 +79,13 @@ hosted.zone.id=Z0123456789ABCDEFGHIJ
 # Set to true if using Hover, GoDaddy, etc.
 external.dns.provider=false
 
+# Alternative apex domain served by the same distribution (optional).
+# Both properties must be set together, and the alternative domain must have its own
+# existing Route53 public hosted zone (external providers are not supported for
+# alternatives). See "Two apex domains, one distribution" below.
+domain.alternative.name=example.org
+alternative.hosted.zone.id=Z9876543210ZYXWVUTSR
+
 # GitHub integration
 # Reference an existing connection ARN (the stack does not create it). Create and
 # authorize the connection once in the console first (see "GitHub Connection" below).
@@ -134,6 +141,16 @@ Use this when you keep the registrar (Hover, GoDaddy, ...) but want Route53 to b
 4. Wait for ACM to validate
 5. Read the four NS records from the new Route53 hosted zone and configure them at your registrar — DNS propagation up to 48h
 6. Keep the validation CNAME permanently for automatic certificate renewal
+
+## Two apex domains, one distribution
+
+To serve a second, unrelated domain (e.g. `example.org` alongside `example.com`) from the same website, set `domain.alternative.name` and `alternative.hosted.zone.id` in the primary domain's properties file and deploy as usual (`cdk deploy --all --context domain=example.com` — stack names stay keyed to the primary domain). This changes three things:
+
+- **Certificate**: the SANs become `example.com`, `*.example.com`, `example.org`, `*.example.org`. Changing SANs *replaces* the ACM certificate, so the first deploy after adding the alternative re-enters `PENDING_VALIDATION` — click **"Create records in Route 53"** in the ACM console once and all names validate together (see [Validation timing](#deployment)). CloudFront only switches after validation, so the primary domain keeps serving.
+- **CloudFront**: both apex names are added as alternate domain names on the same distribution.
+- **Route53**: A/AAAA alias records are created in *each* domain's hosted zone, all pointing to the same distribution.
+
+Both properties must be set together; the alternative domain must be Route53-managed with an existing public hosted zone (`external.dns.provider` applies to the primary domain only). Leaving both blank keeps the exact single-domain behavior.
 
 ## GitHub Connection
 

@@ -1,5 +1,8 @@
 package airhacks.website.route53.control;
 
+import java.util.List;
+
+import airhacks.website.Configuration.AlternativeDomain;
 import airhacks.website.Configuration.CertificateValidationConfiguration;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.services.cloudfront.Distribution;
@@ -41,6 +44,36 @@ public interface Route53 {
                                         .ttl(Duration.minutes(5))
                                         .build();
                 }
+        }
+
+        /**
+         * Alias records for alternative apex domains served by the same distribution.
+         * Alternatives always require an existing Route53 public hosted zone
+         * ({@code alternative.hosted.zone.id}) — {@code external.dns.provider} is a
+         * primary-domain concern and no zone is ever created here. The construct ids of the
+         * primary domain stay unsuffixed, so existing deployments are unaffected. No
+         * validation CNAME either: the ACM console "Create records in Route 53" button
+         * covers all certificate names.
+         */
+        static void setupAlternativeAliasRecords(Construct scope, Distribution distribution,
+                        List<AlternativeDomain> alternativeDomains) {
+                var cloudFrontTarget = new CloudFrontTarget(distribution);
+                alternativeDomains.forEach(alternative -> {
+                        var suffix = alternative.domainName().replace(".", "-");
+                        var hostedZone = HostedZone.fromHostedZoneAttributes(scope, "HostedZone-" + suffix,
+                                        HostedZoneAttributes.builder()
+                                                        .hostedZoneId(alternative.hostedZoneId())
+                                                        .zoneName(alternative.domainName())
+                                                        .build());
+                        AaaaRecord.Builder.create(scope, "AliasRecord-" + suffix)
+                                        .zone(hostedZone)
+                                        .target(RecordTarget.fromAlias(cloudFrontTarget))
+                                        .build();
+                        ARecord.Builder.create(scope, "IPv4AliasRecord-" + suffix)
+                                        .zone(hostedZone)
+                                        .target(RecordTarget.fromAlias(cloudFrontTarget))
+                                        .build();
+                });
         }
 
         /**
