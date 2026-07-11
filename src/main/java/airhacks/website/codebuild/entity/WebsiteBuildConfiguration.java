@@ -19,10 +19,11 @@ public interface WebsiteBuildConfiguration {
 
     static List<String> commands(String domainName, String distributionId) {
         return """
-                echo "publishing static assets to %1$s"
-                echo "emptying bucket ${appname}"
+                echo "publishing static assets from the public directory to %1$s"
+                test -d public || { echo "public directory not found in checkout - failing publish"; false; }
+                echo "emptying bucket %1$s"
                 aws s3 rm s3://%1$s --recursive
-                aws s3 cp . s3://%1$s --recursive
+                aws s3 cp public s3://%1$s --recursive
                 echo "invalidating CloudFront distribution %2$s"
                 aws cloudfront create-invalidation --distribution-id %2$s --paths "/*"
                 """

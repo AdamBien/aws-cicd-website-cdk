@@ -6,6 +6,7 @@ Two-region AWS CDK application deploying production-ready static websites with C
 
 - CloudFront distribution with S3 origin secured via Origin Access Control (OAC)
 - Optimized cache policy (`CACHING_OPTIMIZED`) for static assets
+- Publishes only the website repository's `public/` directory — repository sources never reach the bucket
 - Automatic CloudFront cache invalidation on every pipeline run
 - ACM certificates in us-east-1 for CloudFront compatibility
 - CodePipeline + CodeBuild CI/CD with GitHub CodeStar Connections
@@ -172,6 +173,17 @@ The pipeline pulls the website repository through an AWS CodeConnections (former
 3. With the connection **Available**, `cdk deploy` wires its ARN into the pipeline and the source stage can fetch the repository.
 
 The handshake is a one-time step per connection; subsequent deploys and runs reuse it.
+
+## Publishing
+
+The CodeBuild publishing stage publishes **only the contents of the checked-out repository's `public` directory** to the website bucket — sources, configs, and other repository files never reach the public site. The website repository must therefore contain its ready-to-serve output in `public/` (committed, or produced by a static site generator like Hugo).
+
+The generated buildspec (`WebsiteBuildConfiguration`, spec in `airhacks.website.codebuild`'s `package-info.java`) runs, in order:
+
+1. `test -d public` — fails the build **before** the bucket is touched if `public/` is missing, so the currently published site keeps serving
+2. `aws s3 rm s3://<bucket> --recursive` — empties the website bucket so previously published files that no longer exist do not linger
+3. `aws s3 cp public s3://<bucket> --recursive` — copies only the `public/` contents
+4. `aws cloudfront create-invalidation ...` — see [Cache Invalidation](#cache-invalidation) below
 
 ## Cache Invalidation
 
