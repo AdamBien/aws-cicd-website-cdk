@@ -1,6 +1,6 @@
 {
   "app": "mvn -e -q compile exec:java",
   "context": {
-    "@aws-cdk/core:defaultCrossStackReferences": "both"
+    "@aws-cdk/core:defaultCrossStackReferences": "weak"
   }
 }
