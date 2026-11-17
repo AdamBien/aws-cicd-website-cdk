@@ -95,6 +95,13 @@ git.owner=your-github-username
 git.repository=your-repo-name
 git.branch=main
 
+# Certificate replacement (optional)
+# Opaque label appended to the certificate's construct id. Leave blank normally. Set it
+# (convention: the ISO date of the replacement) only to force a NEW ACM certificate,
+# e.g. after an expired one — see "Replacing an expired certificate" below.
+# No slashes; must differ from every value used before on this domain.
+certificate.version=2026-11-17
+
 # Certificate validation (optional)
 # Not required for Route53 (Flow A) — the ACM console "Create records in Route 53"
 # button creates the validation CNAME and the deployment waits until the cert is issued.
@@ -142,6 +149,36 @@ Use this when you keep the registrar (Hover, GoDaddy, ...) but want Route53 to b
 4. Wait for ACM to validate
 5. Read the four NS records from the new Route53 hosted zone and configure them at your registrar — DNS propagation up to 48h
 6. Keep the validation CNAME permanently for automatic certificate renewal
+
+## Replacing an expired certificate
+
+**CDK does not renew certificates — ACM does.** `cdk deploy` only touches the certificate when its logical id or properties change; an unchanged `DomainCertificateStack` is a no-op even if the certificate has expired. ACM renews a DNS-validated certificate on its own, but only while the validation CNAME of *every* name on the certificate still resolves. An expired certificate therefore means renewal failed — typically because the hosted zone was recreated, DNS moved to another provider, or the alternative domain's CNAME is missing.
+
+First check whether ACM can still renew in place:
+
+```bash
+aws acm describe-certificate --region us-east-1 --certificate-arn <ARN> \
+  --query 'Certificate.{Status:Status,Renewal:RenewalSummary,Validation:DomainValidationOptions[].[DomainName,ValidationStatus,ResourceRecord.Name,ResourceRecord.Value]}'
+```
+
+Restore the CNAME for every name whose `ValidationStatus` is not `SUCCESS` (ACM console → **"Create records in Route 53"**, or add it at the external provider). If the status returns to `ISSUED`, you are done — CloudFront picks the renewed certificate up automatically, nothing to deploy.
+
+If ACM does not renew, replace the certificate by setting `certificate.version` in the domain's properties file to the date of the replacement (e.g. `certificate.version=2026-11-17`). The value is opaque — a date is just the convention, since it documents when the certificate was replaced and is naturally unique next time. It is appended to the construct id (`DnsValidatedCertificate-v2026-11-17`), so CloudFormation creates a **new** certificate and the cross-region export becomes a removed+added pair — the same mechanism as a SAN change (see [Two apex domains](#two-apex-domains-one-distribution)). The procedure is identical:
+
+1. Set `certificate.version` to today's date (any value works, as long as it contains no slash and was never used before on this domain).
+2. Delete the old export parameter in the CloudFront region, otherwise the deploy fails with `Some exports have changed!`:
+   ```bash
+   aws ssm delete-parameter --region eu-central-1 \
+     --name "$(aws ssm get-parameters-by-path --region eu-central-1 \
+         --path '/cdk/exports/aws-cicd-website-cdk-<normalized-domain>-cloudfront/' \
+         --query 'Parameters[0].Name' --output text)"
+   ```
+3. `cdk deploy --all --context domain=example.com` — the certificate stack enters `PENDING_VALIDATION`.
+4. Validate as on first deploy: **"Create records in Route 53"** in the ACM console (us-east-1), or copy the CNAME to the external provider. The deploy then continues through the cloudfront stack, which switches the distribution to the new certificate.
+5. Expect harmless `DELETE_FAILED` retries on the old certificate while CloudFront still references it; delete it in the ACM console afterwards if it was orphaned.
+6. **Keep the validation CNAME permanently** — it is what lets ACM renew next time.
+
+Leave the `certificate.version` value in place; removing or changing it switches the construct id and replaces the certificate again — the value is a one-way marker, not a temporary flag. On the next expired certificate, set it to the new date.
 
 ## Two apex domains, one distribution
 

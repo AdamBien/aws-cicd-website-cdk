@@ -43,22 +43,31 @@ public class DomainCertificateStack extends Stack {
     }
 
     /**
-     * The construct id is derived from the domain set: a SAN change then replaces the
-     * certificate under a NEW logical id, so the cross-region export to the CloudFront
-     * stack is removed+added instead of changed in place — the CDK export writer rejects
-     * a changed value under a stable export name ("Some exports have changed!").
-     * Without alternatives the historical id is kept: existing single-domain
-     * deployments stay untouched.
+     * The construct id is derived from the domain set and the optional certificate.version:
+     * a change to either replaces the certificate under a NEW logical id, so the cross-region
+     * export to the CloudFront stack is removed+added instead of changed in place — the CDK
+     * export writer rejects a changed value under a stable export name
+     * ("Some exports have changed!").
+     *
+     * CloudFormation never renews a certificate — ACM does, and only while the validation
+     * CNAME exists. When renewal failed and the certificate expired, bumping
+     * certificate.version is the way to get a fresh one (see README, "Replacing an expired
+     * certificate"). Without alternatives and without a version the historical id is kept:
+     * existing single-domain deployments stay untouched.
      */
     static String certificateConstructId(DomainEntriesConfiguration configuration) {
         var alternativeDomains = configuration.alternativeDomains();
-        if (alternativeDomains.isEmpty()) {
-            return "DnsValidatedCertificate";
+        var id = "DnsValidatedCertificate";
+        if (!alternativeDomains.isEmpty()) {
+            id = alternativeDomains.stream()
+                    .map(AlternativeDomain::domainName)
+                    .map(name -> name.replace(".", "-"))
+                    .collect(Collectors.joining("-", id + "-", ""));
         }
-        return alternativeDomains.stream()
-                .map(AlternativeDomain::domainName)
-                .map(name -> name.replace(".", "-"))
-                .collect(Collectors.joining("-", "DnsValidatedCertificate-", ""));
+        if (configuration.hasCertificateVersion()) {
+            id = "%s-v%s".formatted(id, configuration.certificateVersion().trim());
+        }
+        return id;
     }
 
     public Certificate getCertificate() {

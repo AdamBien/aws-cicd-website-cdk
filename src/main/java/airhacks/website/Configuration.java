@@ -12,11 +12,20 @@ public interface Configuration {
     public record AlternativeDomain(String domainName, String hostedZoneId) {
     }
 
+    /**
+     * certificateVersion is an opaque, optional label (property certificate.version). Changing it
+     * forces a NEW ACM certificate resource — the only way to replace a certificate that ACM could
+     * not renew (expired). null/blank keeps the historical construct id.
+     */
     public record DomainEntriesConfiguration(String appName, String domainName, String hostedZoneId,
-            List<AlternativeDomain> alternativeDomains, Certificate certificate) {
+            List<AlternativeDomain> alternativeDomains, String certificateVersion, Certificate certificate) {
         public DomainEntriesConfiguration withCertificate(Certificate certificate) {
             return new DomainEntriesConfiguration(this.appName, this.domainName, this.hostedZoneId,
-                    this.alternativeDomains, certificate);
+                    this.alternativeDomains, this.certificateVersion, certificate);
+        }
+
+        public boolean hasCertificateVersion() {
+            return isPresent(this.certificateVersion);
         }
 
         public List<String> allDomainNames() {
@@ -49,7 +58,9 @@ public interface Configuration {
         var domainName = ZCfg.string("domain.name");
         var hostedZoneId = ZCfg.string("hosted.zone.id");
         var alternativeDomains = alternativeDomains(domainName);
-        return new DomainEntriesConfiguration(appName, domainName, hostedZoneId, alternativeDomains, null);
+        var certificateVersion = ZCfg.string("certificate.version", null);
+        return new DomainEntriesConfiguration(appName, domainName, hostedZoneId, alternativeDomains,
+                certificateVersion, null);
     }
 
     /**
